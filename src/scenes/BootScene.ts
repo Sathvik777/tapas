@@ -57,6 +57,7 @@ export class BootScene extends Phaser.Scene {
       'toran',
       'garland',
       'shadow',
+      'spark',
       'emote-talk',
       'emote-done',
       'dust',

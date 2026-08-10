@@ -580,6 +580,15 @@ def make_glow() -> None:
     img.save(OUT / "glow.png")
 
 
+def make_spark() -> None:
+    """Firework ember — a bright core that the emitter tints per burst."""
+    img = Image.new("RGBA", (6, 6), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.ellipse([0, 0, 5, 5], fill=(255, 236, 190, 235))
+    d.ellipse([1, 1, 4, 4], fill=(255, 255, 245, 255))
+    img.save(OUT / "spark.png")
+
+
 def make_shadow() -> None:
     """Soft contact shadow. Scaled per entity at runtime."""
     w, h = 48, 18
@@ -1129,6 +1138,7 @@ def main() -> None:
     make_culture_props()
     make_heart_pickup()
     make_shadow()
+    make_spark()
     make_glow()
     make_emotes()
     make_dust()

@@ -3,8 +3,9 @@
 A cozy side-scrolling adventure that doubles as our wedding invitation —
 inspired by [Milki Delivery](https://dodoot.itch.io/milki-delivery-demo). Walk
 and hop your way right through the countryside, meet the neighbors, and collect
-every detail of the big day. Once you've talked to everyone, the signpost by
-the wedding arch reveals the full invitation.
+every detail of the big day, spend the hearts you find on a gift at the stall,
+and reach the two of us waiting under the mandap — where the full invitation
+finally appears, with fireworks.
 
 Built with [Phaser 3](https://phaser.io) + [Vite](https://vite.dev) + TypeScript.
 Plays in any browser, desktop or phone (on-screen controls appear on touch devices).
@@ -109,6 +110,7 @@ being in front of the player. The camera picks an integer zoom that shows about
 - [x] **Detail pass 3** — a world that moves: drifting clouds, swaying grass, bird flocks, butterflies over the flower patches, and petals thickening as the wedding nears
 - [x] **Detail pass 4a** — landmarks in both vocabularies: falu-red cottage, birch, midsummer pole and dala horse alongside a mandap, marigold garlands, banana plants, kolam and brass lamps that light up at dusk
 - [ ] Detail pass 4b — foreground variety (stone wall and tall-grass stretches instead of one fence)
+- [x] **The finale** — the couple stand under the mandap instead of a signpost, hearts became currency at a gift stall, and reaching the end sets off fireworks
 - [ ] Detail pass 5 — the two of you as the playable leads, plus a companion
 - [ ] Puzzles / quiz about us → earn points (NPC "visited" and heart tracking already in place)
 - [ ] Open leaderboard (needs a small backend — e.g. Supabase or Vercel KV)

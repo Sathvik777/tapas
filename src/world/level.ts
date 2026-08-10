@@ -81,7 +81,6 @@ const HEARTS: Array<[number, number]> = [
 export type PropType =
   // shared countryside
   | 'tree'
-  | 'signpost'
   | 'cart'
   | 'sign'
   | 'rock'
@@ -162,7 +161,6 @@ const PROPS: PropDef[] = [
   { type: 'lamp', tx: 168 },
   { type: 'mandap', tx: 171 },
   { type: 'kolam', tx: 171 },
-  { type: 'signpost', tx: 175 },
   { type: 'lamp', tx: 178 },
 ];
 

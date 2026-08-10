@@ -107,14 +107,71 @@ export const NPCS: NpcDef[] = [
   },
 ];
 
-export const SIGNPOST = {
-  locked: [
-    'The signpost is covered in ribbons... it looks like an invitation, but some parts are missing.',
-    'Maybe the villagers know more. Talk to everyone first! 💌',
+/**
+ * The finale. The two of you are standing under the mandap — talking to you is
+ * what completes the invitation, so this is the last thing a guest reads.
+ */
+export const COUPLE_SCENE = {
+  name: `${COUPLE.partner1} & ${COUPLE.partner2}`,
+  role: 'the couple',
+  /** Before every villager has been met. */
+  waiting: [
+    `You made it all this way! But you have not met everyone yet — they would never forgive us.`,
+    `Go on, say hello to the rest. We are not going anywhere. 💐`,
   ],
-  unlockedIntro: [
-    'You gathered every detail! The invitation is complete... ✨',
+  greeting: [
+    `You found us. Thank you for walking all this way to get here.`,
+    `[Write the line you would want every single guest to read — the two of you, in your own words.]`,
   ],
+  /** Only shown if the guest bought something at the stall. */
+  giftLine: (gift: string) => `And you brought ${gift}! You really did not have to. We love it.`,
+  finale: [`Everything you need is on the invitation. See you on the day. ♥`],
+};
+
+/** The gift stall, roughly two thirds of the way along. Hearts are the currency. */
+export interface GiftDef {
+  id: string;
+  label: string;
+  price: number;
+  /** the shopkeeper's pitch, shown under the gift in the stall */
+  note: string;
+}
+
+export const SHOP = {
+  keeper: `[Stallholder's name]`,
+  role: 'gift stall',
+  /** Said the first time you come by. */
+  intro: [
+    `Buying for the couple, are you? Sensible. Turning up empty-handed is a whole conversation with the aunties.`,
+    `Hearts along the road are as good as coin here. Pick something they will actually keep.`,
+  ],
+  broke: [
+    `Come back when you have found a few more hearts — they are scattered all along the road, some up on the ledges.`,
+  ],
+  alreadyBought: (gift: string) => [
+    `${gift} — good choice. They will love it.`,
+    `Now go on, they are waiting for you under the mandap.`,
+  ],
+  gifts: [
+    {
+      id: 'garland',
+      label: 'a marigold garland',
+      price: 3,
+      note: 'Nobody in the history of weddings has regretted more marigolds.',
+    },
+    {
+      id: 'laddus',
+      label: 'a box of laddus',
+      price: 5,
+      note: "Ammamma's recipe. Bring two boxes if you want to be popular.",
+    },
+    {
+      id: 'dalahorse',
+      label: 'a painted dala horse',
+      price: 8,
+      note: 'Carved and painted in Dalarna. It will sit on their shelf for forty years.',
+    },
+  ] as GiftDef[],
 };
 
 export const INVITATION_LINES = [

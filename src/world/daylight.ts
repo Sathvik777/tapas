@@ -1,7 +1,7 @@
 /**
  * The walk has a time of day.
  *
- * Progress through the level (0 at the spawn, 1 at the signpost) drives a
+ * Progress through the level (0 at the spawn, 1 at the mandap) drives a
  * lerp between a handful of keyframed moods, so guests set off in the cool
  * light of morning and reach the wedding at golden hour. Nothing here is
  * animated on a clock — the sky is a function of how far you've walked, which

@@ -33,6 +33,16 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
     });
   }
 
+  /**
+   * Once you have spoken to someone they stop blocking the road: they are there
+   * to be noticed, and having to hop over the same grandmother on every pass
+   * gets old quickly.
+   */
+  makePassable(): void {
+    const body = this.body as Phaser.Physics.Arcade.StaticBody | null;
+    if (body) body.enable = false;
+  }
+
   /** Turn to face the player when spoken to (sprites face right by default). */
   faceTowards(x: number): void {
     this.setFlipX(x < this.x);

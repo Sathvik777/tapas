@@ -2,7 +2,7 @@ import { el, injectStylesOnce, isTouchDevice } from './dom';
 
 /**
  * Platformer touch controls: ◀ ▶ on the left, jump on the right,
- * and a contextual ❤ talk button that appears near NPCs/signposts.
+ * and a contextual ❤ talk button that appears near anyone you can talk to.
  * Only mounted on touch devices.
  */
 export class TouchControls {

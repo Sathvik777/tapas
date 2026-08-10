@@ -25,8 +25,10 @@ export function injectStylesOnce(): void {
     max-width: 80vw; text-align: center;
   }
   .wq-dialogue {
+    /* Top half: on a phone the bottom of the screen is thumbs and controls,
+       and a card down there covers the person who is speaking. */
     position: fixed; left: 50%; transform: translateX(-50%);
-    bottom: max(16px, env(safe-area-inset-bottom));
+    top: max(14px, env(safe-area-inset-top));
     width: min(560px, calc(100vw - 28px));
     z-index: 30; box-sizing: border-box;
     background: #fdf9f0; color: #4a3428;
@@ -86,6 +88,22 @@ export function injectStylesOnce(): void {
   .wq-card h1 { font-size: 27px; margin: 4px 0 2px; color: #c9455c; font-weight: normal; }
   .wq-card .wq-sub { font-style: italic; color: #8a7a6a; margin-bottom: 14px; }
   .wq-card p { margin: 5px 0; }
+  .wq-shop { text-align: left; }
+  .wq-shop h1, .wq-shop .wq-sub { text-align: center; }
+  .wq-gift {
+    display: block; width: 100%; text-align: left; box-sizing: border-box;
+    margin: 10px 0 0; padding: 12px 14px;
+    background: #fff9ec; color: #4a3428;
+    border: 3px solid #4a3428; border-radius: 12px;
+    box-shadow: 0 3px 0 rgba(74, 52, 40, 0.35);
+    font: 15px/1.4 Georgia, serif; cursor: pointer;
+  }
+  .wq-gift:disabled { opacity: 0.5; cursor: default; box-shadow: none; }
+  .wq-gift:not(:disabled):active { transform: translateY(3px); box-shadow: none; }
+  .wq-gift-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+  .wq-gift-name { font-size: 17px; }
+  .wq-gift-price { color: #c9455c; white-space: nowrap; }
+  .wq-gift-note { margin-top: 4px; font-size: 13.5px; font-style: italic; color: #8a7a6a; }
   .wq-card .wq-close {
     margin-top: 20px; padding: 10px 24px; border-radius: 999px;
     border: 3px solid #4a3428; background: #e0576f; color: #fff;

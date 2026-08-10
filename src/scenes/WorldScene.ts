@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
-import { INVITATION_LINES, NPCS, SIGNPOST } from '../content/wedding';
+import { COUPLE_SCENE, INVITATION_LINES, NPCS, SHOP, type GiftDef } from '../content/wedding';
 import { NPC } from '../objects/NPC';
 import { Player } from '../objects/Player';
 import { DialogueBox } from '../ui/DialogueBox';
 import { isTouchDevice } from '../ui/dom';
 import { Hud } from '../ui/Hud';
 import { InvitationCard } from '../ui/InvitationCard';
+import { ShopCard } from '../ui/ShopCard';
 import { TouchControls } from '../ui/TouchControls';
 import { moodAt, moodTintFor, type Mood } from '../world/daylight';
 import {
@@ -31,7 +32,13 @@ export class WorldScene extends Phaser.Scene {
   private emotes = new Map<NPC, Phaser.GameObjects.Image>();
   private wasOnGround = true;
   private decor: Array<{ sprite: Phaser.GameObjects.Image; phase: number }> = [];
-  private signpost!: Phaser.GameObjects.Image;
+  /** The two of them under the mandap — the last thing you reach. */
+  private couple!: Phaser.GameObjects.Sprite;
+  private shopkeeper!: Phaser.GameObjects.Sprite;
+  private shop = new ShopCard();
+  private gift: GiftDef | null = null;
+  private metCouple = false;
+  private shopGreeted = false;
   private indicator!: Phaser.GameObjects.Image;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
@@ -143,6 +150,8 @@ export class WorldScene extends Phaser.Scene {
         .setDepth(dec.kind === 'flowers' ? 7 : 1);
       this.decor.push({ sprite, phase: dec.tx * 0.7 });
     }
+    this.placeCouple(level);
+    this.placeShopkeeper(level);
     this.spawnButterflies(level.decor);
     this.time.addEvent({ delay: 9000, loop: true, callback: () => this.releaseBirds() });
     this.releaseBirds();
@@ -215,6 +224,14 @@ export class WorldScene extends Phaser.Scene {
       player: () => ({ x: this.player.x, y: this.player.y }),
       visited: () => this.visitedCount(),
       hearts: () => this.heartCount,
+      gift: () => this.gift?.id ?? null,
+      /** Test hook: the stall needs hearts, and platforming for them in a
+       *  headless browser is slow and beside the point. */
+      giveHearts: (n: number) => {
+        this.heartCount += n;
+        this.hud.setHearts(this.heartCount);
+        return this.heartCount;
+      },
       mood: () => ({
         progress: +(this.player.x / this.levelWidth).toFixed(3),
         sky: this.mood?.sky.toString(16),
@@ -484,7 +501,6 @@ export class WorldScene extends Phaser.Scene {
     rock: 6,
     cart: 6,
     sign: 6,
-    signpost: 6,
     lamp: 6,
     dalahorse: 6,
     toran: 6,
@@ -511,7 +527,6 @@ export class WorldScene extends Phaser.Scene {
     const depth = WorldScene.PROP_DEPTH[p.type];
     const [originY, dy] = WorldScene.PROP_ANCHOR[p.type] ?? [1, 0];
     const img = this.add.image(x, surfaceY + dy, p.type).setOrigin(0.5, originY).setDepth(depth);
-    if (p.type === 'signpost') this.signpost = img;
 
     // Lamps carry a halo that fades up with the evening.
     if (p.type === 'lamp') {
@@ -533,7 +548,6 @@ export class WorldScene extends Phaser.Scene {
       cottage: 108,
       mandap: 128,
       banana: 26,
-      signpost: 22,
       sign: 26,
       cart: 64,
       bush: 46,
@@ -563,31 +577,32 @@ export class WorldScene extends Phaser.Scene {
 
   // ---------------------------------------------------------------- interaction
   private get uiOpen(): boolean {
-    return this.dialogue.isOpen || this.invitation.isOpen;
+    return this.dialogue.isOpen || this.invitation.isOpen || this.shop.isOpen;
   }
 
   private visitedCount(): number {
     return this.npcs.filter((n) => n.visited).length;
   }
 
-  private nearestInteractable(): NPC | 'signpost' | undefined {
-    let best: NPC | undefined;
+  /**
+   * Nearest of everything you can talk to, compared on one footing. Preferring
+   * villagers as a class meant a villager 30px away beat the stallholder 23px
+   * away, and the stall could not be opened at all.
+   */
+  private nearestInteractable(): NPC | 'couple' | 'shop' | undefined {
+    let best: NPC | 'couple' | 'shop' | undefined;
     let bestDist = INTERACT_RANGE;
-    for (const npc of this.npcs) {
-      const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, npc.x, npc.y);
+    const consider = (candidate: NPC | 'couple' | 'shop', x: number, y: number) => {
+      const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, x, y);
       if (d < bestDist) {
         bestDist = d;
-        best = npc;
+        best = candidate;
       }
-    }
-    if (best) return best;
-    const ds = Phaser.Math.Distance.Between(
-      this.player.x,
-      this.player.y,
-      this.signpost.x,
-      this.signpost.y,
-    );
-    return ds < INTERACT_RANGE ? 'signpost' : undefined;
+    };
+    for (const npc of this.npcs) consider(npc, npc.x, npc.y);
+    consider('couple', this.couple.x + 13, this.couple.y);
+    consider('shop', this.shopkeeper.x, this.shopkeeper.y);
+    return best;
   }
 
   private onAction(): void {
@@ -597,8 +612,23 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
     const target = this.nearestInteractable();
-    if (target === 'signpost') this.openSignpost();
+    if (target === 'couple') this.meetCouple();
+    else if (target === 'shop') this.openShop();
     else if (target) this.tryInteract(target);
+  }
+
+  /** Every conversation goes through here so the HUD parks itself consistently. */
+  private say(name: string, pages: string[], role?: string, onClose?: () => void): void {
+    this.hud.setHidden(true);
+    this.dialogue.show(
+      name,
+      pages,
+      () => {
+        this.hud.setHidden(false);
+        onClose?.();
+      },
+      role,
+    );
   }
 
   private tryInteract(npc: NPC): void {
@@ -607,39 +637,154 @@ export class WorldScene extends Phaser.Scene {
     if (d > INTERACT_RANGE * 1.5) return;
     this.player.halt();
     npc.faceTowards(this.player.x);
-    this.dialogue.show(
-      npc.def.name,
-      npc.def.pages,
-      () => {
-      if (!npc.visited) {
-        npc.visited = true;
-        this.hud.setProgress(this.visitedCount(), this.npcs.length);
-        this.checkCompletion();
-        }
-      },
-      npc.def.role,
-    );
+    this.say(npc.def.name, npc.def.pages, npc.def.role, () => {
+      if (npc.visited) return;
+      npc.visited = true;
+      npc.makePassable();
+      this.hud.setProgress(this.visitedCount(), this.npcs.length);
+      this.checkCompletion();
+    });
   }
 
-  private openSignpost(): void {
+  /** Stand the couple in the middle of the mandap's flowers. */
+  private placeCouple(level: ParsedLevel): void {
+    const mandap = level.props.find((p) => p.type === 'mandap')!;
+    const cx = mandap.tx * TILE_SIZE + TILE_SIZE / 2;
+    const y = level.surfaceY(mandap.tx);
+    const groom = this.add.sprite(cx - 13, y, 'char-groom').setOrigin(0.5, 1).setDepth(11);
+    const bride = this.add.sprite(cx + 13, y, 'char-bride').setOrigin(0.5, 1).setDepth(11);
+    groom.play('char-groom-idle');
+    bride.play('char-bride-idle');
+    bride.setFlipX(true); // turned toward each other
+    this.addShadow(cx - 13, y, 24, 10);
+    this.addShadow(cx + 13, y, 24, 10);
+    this.couple = groom;
+  }
+
+  private placeShopkeeper(level: ParsedLevel): void {
+    const cart = level.props.find((p) => p.type === 'cart')!;
+    const x = cart.tx * TILE_SIZE + TILE_SIZE / 2 - 46; // clear of the villager beside the cart
+    const y = level.surfaceY(cart.tx);
+    this.shopkeeper = this.add
+      .sprite(x, y, 'char-npc-baker')
+      .setOrigin(0.5, 1)
+      .setDepth(10)
+      .setFlipX(true);
+    this.shopkeeper.play('char-npc-baker-idle');
+    this.addShadow(x, y, 24, 9);
+    this.add.image(x, y - 52, 'emote-talk').setDepth(60);
+  }
+
+  private openShop(): void {
     if (this.uiOpen) return;
     this.player.halt();
-    const all = this.visitedCount() === this.npcs.length;
-    if (!all) {
-      this.dialogue.show('Signpost', SIGNPOST.locked);
+    if (this.gift) {
+      this.say(SHOP.keeper, SHOP.alreadyBought(this.gift.label), SHOP.role);
       return;
     }
-    this.dialogue.show('Signpost', SIGNPOST.unlockedIntro, () => {
+    const cheapest = Math.min(...SHOP.gifts.map((g) => g.price));
+    if (this.heartCount < cheapest) {
+      this.say(SHOP.keeper, this.shopGreeted ? SHOP.broke : [...SHOP.intro, ...SHOP.broke], SHOP.role);
+      this.shopGreeted = true;
+      return;
+    }
+    const pages = this.shopGreeted ? [SHOP.intro[1]] : SHOP.intro;
+    this.shopGreeted = true;
+    this.say(SHOP.keeper, pages, SHOP.role, () => {
+      this.hud.setHidden(true);
+      this.shop.show(
+        SHOP.gifts,
+        this.heartCount,
+        (gift) => {
+          this.gift = gift;
+          this.heartCount -= gift.price;
+          this.hud.setHearts(this.heartCount);
+          this.hud.setGift(gift.label);
+          this.hud.setHidden(false);
+          this.hud.showToast(`You bought ${gift.label} 🎁`);
+        },
+        () => this.hud.setHidden(false),
+      );
+    });
+  }
+
+  private meetCouple(): void {
+    if (this.uiOpen) return;
+    this.player.halt();
+    if (this.visitedCount() < this.npcs.length) {
+      this.say(COUPLE_SCENE.name, COUPLE_SCENE.waiting, COUPLE_SCENE.role);
+      return;
+    }
+    if (this.metCouple) {
+      // already had the moment — just hand the invitation back
       this.invitation.show(INVITATION_LINES);
+      return;
+    }
+    const pages = [
+      ...COUPLE_SCENE.greeting,
+      ...(this.gift ? [COUPLE_SCENE.giftLine(this.gift.label)] : []),
+      ...COUPLE_SCENE.finale,
+    ];
+    this.say(COUPLE_SCENE.name, pages, COUPLE_SCENE.role, () => {
+      this.metCouple = true;
+      this.celebrate();
+      this.invitation.show(INVITATION_LINES);
+    });
+  }
+
+  /** Fireworks over the mandap once the invitation is earned. */
+  private celebrate(): void {
+    const cam = this.cameras.main;
+    let launched = 0;
+    this.time.addEvent({
+      delay: 620,
+      repeat: 11,
+      callback: () => {
+        const view = cam.worldView;
+        const x = view.x + Phaser.Math.Between(60, Math.max(80, view.width - 60));
+        const peak = view.y + view.height * Phaser.Math.FloatBetween(0.12, 0.38);
+        const colour = [0xffd76b, 0xf28bb4, 0xf5a623, 0xfdf9f0, 0x9ad0f5][launched++ % 5];
+
+        const rocket = this.add
+          .image(x, view.y + view.height * 0.72, 'spark')
+          .setDepth(95)
+          .setTint(colour)
+          .setBlendMode(Phaser.BlendModes.ADD)
+          .setScale(1.4);
+        this.tweens.add({
+          targets: rocket,
+          y: peak,
+          duration: 620,
+          ease: 'Quad.easeOut',
+          onComplete: () => {
+            rocket.destroy();
+            const burst = this.add.particles(x, peak, 'spark', {
+              speed: { min: 40, max: 165 },
+              angle: { min: 0, max: 360 },
+              lifespan: { min: 700, max: 1400 },
+              gravityY: 70,
+              quantity: 34,
+              scale: { start: 1.5, end: 0 },
+              alpha: { start: 1, end: 0 },
+              tint: colour,
+              blendMode: Phaser.BlendModes.ADD,
+              emitting: false,
+            });
+            burst.setDepth(95);
+            burst.explode(34);
+            this.time.delayedCall(1600, () => burst.destroy());
+          },
+        });
+      },
     });
   }
 
   private checkCompletion(): void {
     if (this.celebrated || this.visitedCount() < this.npcs.length) return;
     this.celebrated = true;
-    this.hud.showToast('✨ You met everyone! Read the signpost by the wedding arch → ✨', 6000);
+    this.hud.showToast('✨ You met everyone! They are waiting under the mandap → ✨', 6000);
     this.add
-      .particles(this.signpost.x, this.signpost.y - 30, 'heart', {
+      .particles(this.couple.x + 13, this.couple.y - 46, 'heart', {
         speed: { min: 20, max: 55 },
         lifespan: 1800,
         quantity: 1,
@@ -693,11 +838,15 @@ export class WorldScene extends Phaser.Scene {
 
     const target = this.nearestInteractable();
     this.touch?.setActionVisible(!!target);
-    if (target) {
-      const obj = target === 'signpost' ? this.signpost : target;
+    // Villagers and the stall carry their own over-head emotes; the floating
+    // heart is reserved for the couple at the end.
+    if (target === 'couple') {
       const bob = Math.sin(this.time.now / 220) * 3;
       this.indicator.setVisible(true);
-      this.indicator.setPosition(obj.x, obj.y - obj.displayHeight - 12 + bob);
+      this.indicator.setPosition(
+        this.couple.x + 13,
+        this.couple.y - this.couple.displayHeight - 14 + bob,
+      );
     } else {
       this.indicator.setVisible(false);
     }

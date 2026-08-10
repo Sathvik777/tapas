@@ -4,8 +4,8 @@
  * Walks the whole level like a player would — holding right, hopping when
  * something blocks the way — talks to every villager, and asserts the things
  * that must never break: everyone is reachable and speaks, the HUD counts them
- * all, the signpost stays locked until they have, the invitation card opens at
- * the end, and the console stays clean throughout.
+ * all, the gift stall trades, the couple are waiting under the mandap, the
+ * invitation card opens at the end, and the console stays clean throughout.
  *
  * This is the gate every change should pass before it is pushed.
  *
@@ -34,7 +34,8 @@ const VILLAGERS = [
   ['little one (rings)', 155],
 ];
 const TILE = 32;
-const SIGNPOST_COL = 175;
+const MANDAP_COL = 171;   // the couple stand under it
+const SHOP_COL = 97;      // the gift stall
 
 const failures = [];
 const errors = [];
@@ -103,6 +104,24 @@ for (const [name, col] of VILLAGERS) {
   const at = await walkTo(col * TILE + TILE / 2, 24);
   const talked = await talkThrough();
   check(`${name} reachable and speaks`, talked, `stopped at x=${at.toFixed(0)}`);
+
+  // the stall sits just before the fourth villager
+  if (col === 68) {
+    await walkTo(SHOP_COL * TILE + TILE / 2 - 46, 20);
+    await page.evaluate(() => window.__wq.giveHearts(8));
+    await talkThrough(); // the stallholder's pitch, which opens the stall
+    await page.waitForTimeout(600);
+    const stallOpen = (await page.locator('.wq-shop').count()) > 0;
+    check('gift stall opens', stallOpen);
+    if (stallOpen) {
+      const affordable = page.locator('.wq-gift:not([disabled])');
+      check('affordable gifts offered', (await affordable.count()) > 0);
+      await affordable.first().click();
+      await page.waitForTimeout(500);
+      const bought = await page.evaluate(() => window.__wq.gift());
+      check('gift bought and carried', !!bought, String(bought));
+    }
+  }
 }
 
 const afterVillagers = await stats();
@@ -113,17 +132,15 @@ check(
 );
 
 // The daylight arc should have reached golden hour by the mandap.
-await walkTo(SIGNPOST_COL * TILE + TILE / 2, 26);
+await walkTo(MANDAP_COL * TILE + TILE / 2, 30);
 const mood = await page.evaluate(() => window.__wq.mood());
 check('walk ends at golden hour', mood.progress > 0.9 && mood.lightsOn > 0.5, JSON.stringify(mood));
 
-await page.keyboard.press('KeyE');
-await page.waitForTimeout(900);
-await page.keyboard.press('KeyE');
-await page.waitForTimeout(250);
-await page.keyboard.press('KeyE');
-await page.waitForTimeout(900);
+const coupleSpoke = await talkThrough(6);
+check('the couple are there to meet', coupleSpoke);
+await page.waitForTimeout(1800); // let the fireworks get going
 check('invitation card opens', (await page.locator('.wq-card').count()) > 0);
+await page.screenshot({ path: 'playthrough-finale.png' });
 
 check('no console or page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

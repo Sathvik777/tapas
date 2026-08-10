@@ -95,7 +95,7 @@ never exposes an edge.
 
 Roughly: parallax bands are negative, the **tilemap sits at 0**, props 0.4–7,
 heart pickups 8, villagers 10, player 20, foreground fence 40, emotes 60,
-particles 90, signpost marker 100.
+particles 90, the couple's marker 100.
 
 The tilemap is at 0 rather than 5 specifically so contact shadows can sit *under*
 each prop and still read above the ground. Moving it will silently hide every
@@ -115,15 +115,39 @@ and reveal empty space.
 
 ### Interaction
 
-- **Villagers are solid.** You stop beside them rather than standing inside
-  them, which is also what makes them impossible to walk past without noticing.
+- **Villagers are solid until you've met them.** Blocking the road is what makes
+  them impossible to walk past without noticing; once you've spoken, they stop
+  blocking, because hopping over the same grandmother on every pass gets old.
   The first time you push against one, the game offers "hop over with Space".
 - **One meaning per symbol.** A floating heart is a collectible. A speech bubble
   over someone's head means you haven't met them; it becomes a heart bubble once
-  you have. The signpost has its own marker. Early on the heart meant both "talk
-  here" and "collect me", which read as a bug.
+  you have. The couple at the end have their own marker. Early on the heart meant
+  both "talk here" and "collect me", which read as a bug.
+- **`nearestInteractable` compares everyone on one footing.** It used to return
+  the nearest *villager* before considering anything else, which made the gift
+  stall unopenable whenever a villager stood within range of it — the stall was
+  nearer and still lost.
 
 ---
+
+### Dialogue
+
+The card sits in the **top half**. On a phone the bottom of the screen is thumbs
+and controls, and a card down there covers the person who is speaking.
+
+It **advances by itself** after a pause that scales with the length of the line,
+so the game can be watched one-handed or handed to someone who is not going to
+tap. Tapping still works and simply gets there sooner. The whole screen is the
+target — see the traps below.
+
+### The finale
+
+Hearts scattered along the road are **currency**, which is what gives them a
+point beyond being nice to grab. They buy a gift at the stall roughly two thirds
+of the way along; the stallholder gives tips on what the couple would actually
+keep. The couple themselves stand under the mandap at the end — talking to them
+is what completes the invitation, and it sets off fireworks. If you brought a
+gift, they mention it.
 
 ## Content
 
@@ -201,6 +225,10 @@ Things that look like bugs but aren't, and fixes that will reintroduce real ones
 - **The production URL is empty by design, for now.** Vercel builds production
   from `master`, which is still the original Python fork. The branch preview URL
   is the live game; merging is what makes production serve it.
+- **`spark.png` and friends must be added to `BootScene`'s load list.** Generating
+  an asset is only half of it. A texture that was never loaded renders as
+  Phaser's missing-texture placeholder — green wireframe boxes — which is exactly
+  what the first pass of the fireworks looked like.
 - **Preview deployments may sit behind a Vercel login.** That is deployment
   protection, not a broken build — Settings → Deployment Protection → Vercel
   Authentication.
