@@ -9,6 +9,11 @@ the wedding arch reveals the full invitation.
 Built with [Phaser 3](https://phaser.io) + [Vite](https://vite.dev) + TypeScript.
 Plays in any browser, desktop or phone (on-screen controls appear on touch devices).
 
+📐 **[docs/DESIGN.md](docs/DESIGN.md)** — why it's built this way: the art
+direction, how the two families' worlds are blended, the systems and the traps.
+**[CLAUDE.md](CLAUDE.md)** is the short version for anyone (or any agent)
+picking the code up cold.
+
 ## Play / develop
 
 Node 22 (pinned in `.nvmrc`).
@@ -59,9 +64,23 @@ still the old TAPAS Python fork — there is no `package.json` there, so there i
 nothing for it to build. Merging this branch into `master` makes the production
 URL serve the game. Until then, use the preview URL above.
 
+## Checking a change
+
+`scripts/playthrough.mjs` walks the whole level, talks to every villager, and
+asserts the things that must not break — everyone reachable, the HUD counting
+them all, the walk ending at golden hour, the invitation card opening, and a
+clean console.
+
+```bash
+npm run build && npm run preview   # one terminal
+npm i -D playwright                # once; deliberately not a project dependency
+node scripts/playthrough.mjs       # another terminal
+```
+
 ## Project layout
 
 ```
+docs/DESIGN.md          ✏️  design decisions, house rules and known traps
 public/assets/          generated sprites + parallax art (see CREDITS.md)
 scripts/                asset generator (python3 scripts/gen_placeholder_assets.py)
 src/content/wedding.ts  ✏️  all wedding text, family names, dialogue and placement
