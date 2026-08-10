@@ -27,6 +27,8 @@ const SHADOW_ALPHA = 0.62;
 export class WorldScene extends Phaser.Scene {
   private player!: Player;
   private npcs: NPC[] = [];
+  private emotes = new Map<NPC, Phaser.GameObjects.Image>();
+  private wasOnGround = true;
   private signpost!: Phaser.GameObjects.Image;
   private indicator!: Phaser.GameObjects.Image;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -95,6 +97,12 @@ export class WorldScene extends Phaser.Scene {
       const npc = new NPC(this, def, level.surfaceY(def.tx));
       this.npcs.push(npc);
       this.addShadow(npc.x, npc.y, 24, 9);
+      // A marker over every villager, not just the nearest one, so you can see
+      // who is left to meet from across the screen.
+      this.emotes.set(
+        npc,
+        this.add.image(npc.x, npc.y - npc.displayHeight - 10, 'emote-talk').setDepth(60),
+      );
       this.physics.add.collider(this.player, npc);
       npc.setInteractive({ useHandCursor: true });
       npc.on('pointerdown', () => this.tryInteract(npc));
@@ -164,7 +172,7 @@ export class WorldScene extends Phaser.Scene {
     // Space & Up jump — but they advance dialogue when it's open
     const jumpOrAdvance = () => {
       if (this.uiOpen) this.onAction();
-      else this.player.jump();
+      else if (this.player.jump()) this.puffDust(this.player.x, this.player.y);
     };
     kb.on('keydown-SPACE', jumpOrAdvance);
     kb.on('keydown-UP', jumpOrAdvance);
@@ -180,7 +188,7 @@ export class WorldScene extends Phaser.Scene {
     }
     this.touch = new TouchControls(
       () => {
-        if (!this.uiOpen) this.player.jump();
+        if (!this.uiOpen && this.player.jump()) this.puffDust(this.player.x, this.player.y);
       },
       () => this.onAction(),
     );
@@ -305,6 +313,30 @@ export class WorldScene extends Phaser.Scene {
     ]);
   }
 
+  private updateEmotes(): void {
+    const bob = Math.sin(this.time.now / 420) * 2;
+    for (const [npc, emote] of this.emotes) {
+      emote.setTexture(npc.visited ? 'emote-done' : 'emote-talk');
+      emote.setPosition(npc.x, npc.y - npc.displayHeight - 10 + bob);
+    }
+  }
+
+  private puffDust(x: number, y: number): void {
+    for (const dir of [-1, 1]) {
+      const puff = this.add.image(x + dir * 4, y - 2, 'dust').setDepth(18).setScale(0.7);
+      this.tweens.add({
+        targets: puff,
+        x: puff.x + dir * 12,
+        y: puff.y - 4,
+        alpha: 0,
+        scale: 1.25,
+        duration: 320,
+        ease: 'Quad.easeOut',
+        onComplete: () => puff.destroy(),
+      });
+    }
+  }
+
   private updateShadow(): void {
     if (this.player.onGround) this.lastGroundY = this.player.y;
     const height = Math.max(0, this.lastGroundY - this.player.y);
@@ -418,13 +450,18 @@ export class WorldScene extends Phaser.Scene {
     if (d > INTERACT_RANGE * 1.5) return;
     this.player.halt();
     npc.faceTowards(this.player.x);
-    this.dialogue.show(npc.def.name, npc.def.pages, () => {
+    this.dialogue.show(
+      npc.def.name,
+      npc.def.pages,
+      () => {
       if (!npc.visited) {
         npc.visited = true;
         this.hud.setProgress(this.visitedCount(), this.npcs.length);
         this.checkCompletion();
-      }
-    });
+        }
+      },
+      npc.def.role,
+    );
   }
 
   private openSignpost(): void {
@@ -485,6 +522,15 @@ export class WorldScene extends Phaser.Scene {
     } else {
       this.blockedFrames = 0;
     }
+
+    // landing: squash and kick up dust
+    if (this.player.onGround && !this.wasOnGround) {
+      this.player.squash();
+      this.puffDust(this.player.x, this.player.y);
+    }
+    this.wasOnGround = this.player.onGround;
+
+    this.updateEmotes();
 
     const target = this.nearestInteractable();
     this.touch?.setActionVisible(!!target);

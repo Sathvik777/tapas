@@ -17,7 +17,7 @@ export class DialogueBox {
     return !!this.box;
   }
 
-  show(name: string, pages: string[], onClose?: () => void): void {
+  show(name: string, pages: string[], onClose?: () => void, role?: string): void {
     injectStylesOnce();
     this.destroy();
     this.pages = pages;
@@ -26,7 +26,7 @@ export class DialogueBox {
 
     this.box = el('div', 'wq-dialogue');
     const nameEl = el('div', 'wq-name', this.box);
-    nameEl.textContent = name;
+    nameEl.textContent = role ? `${name} · ${role}` : name;
     this.textEl = el('div', 'wq-text', this.box);
     const more = el('div', 'wq-more', this.box);
     more.textContent = '▾ tap';

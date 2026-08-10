@@ -585,8 +585,13 @@ def make_heart_pickup() -> None:
 
 
 # ---------------------------------------------------------------- characters
-FRAME_W, FRAME_H = 32, 40
-POSES = ["idle", "w1", "w2", "w3", "jump"]
+# Frames are 40 wide (art centred in 32px, leaving room on the right for a held
+# prop) x 40 tall. Order: idle, walk x3, jump, blink.
+FRAME_W, FRAME_H = 40, 40
+BODY_X = 4
+POSES = ["idle", "w1", "w2", "w3", "jump", "blink"]
+
+JASMINE = "#f7f3ea"
 
 
 def shade(hex_color: str, f: float) -> str:
@@ -594,82 +599,205 @@ def shade(hex_color: str, f: float) -> str:
     return "#%02x%02x%02x" % tuple(max(0, min(255, int(v * f))) for v in c)
 
 
-def draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress):
-    """A chibi character facing RIGHT on a 32x40 canvas."""
+# ---- held props. Each is drawn after the body, in front of the torso.
+def acc_cane(d, ox, by, hy):
+    """Mormor: knitted shawl and a walking cane."""
+    d.polygon([(ox + 10, by + 1), (ox + 22, by + 1), (ox + 19, by + 9), (ox + 13, by + 9)], fill="#b0577a")
+    d.polygon([(ox + 10, by + 1), (ox + 16, by + 1), (ox + 14, by + 9), (ox + 13, by + 9)], fill="#c76d90")
+    d.line([ox + 27, by + 6, ox + 27, by + 20], fill="#8a5a34", width=2)
+    d.arc([ox + 23, by + 2, ox + 31, by + 10], 180, 350, fill="#8a5a34", width=2)
+    for i in range(3):  # flower crown
+        d.ellipse([ox + 11 + i * 5, hy - 3, ox + 15 + i * 5, hy + 1],
+                  fill=["#f7f3ea", "#f5d76b", "#6f9ad4"][i])
+
+
+def acc_saree(d, ox, by, hy):
+    """Ammamma: a pallu drawn over one shoulder, jasmine in her hair, a stick."""
+    d.polygon([(ox + 11, by), (ox + 17, by), (ox + 24, by + 13), (ox + 18, by + 13)], fill="#c9455c")
+    d.line([ox + 12, by + 2, ox + 22, by + 12], fill="#f5d76b")
+    d.line([ox + 14, by, ox + 24, by + 10], fill="#f5d76b")
+    d.line([ox + 27, by + 5, ox + 27, by + 20], fill="#7d5333", width=2)
+    for i in range(4):  # mallige strand
+        d.ellipse([ox + 8, hy + 3 + i * 3, ox + 11, hy + 6 + i * 3], fill=JASMINE)
+
+
+def acc_nadaswaram(d, ox, by, hy):
+    """The nadaswaram — long conical oboe, raised to play."""
+    del hy
+    d.line([ox + 21, by + 2, ox + 33, by - 9], fill="#4a3323", width=3)
+    d.line([ox + 22, by + 1, ox + 31, by - 7], fill="#6b4a2e", width=1)
+    d.polygon([(ox + 31, by - 7), (ox + 39, by - 14), (ox + 36, by - 4)], fill="#4a3323")
+    d.polygon([(ox + 32, by - 8), (ox + 37, by - 12), (ox + 35, by - 6)], fill="#7d5333")
+    d.ellipse([ox + 19, by + 1, ox + 23, by + 5], fill="#c9a227")
+    for nx, ny in ((ox + 34, by - 20), (ox + 38, by - 26)):
+        d.ellipse([nx, ny + 3, nx + 3, ny + 6], fill="#4a3428")
+        d.line([nx + 3, ny + 4, nx + 3, ny], fill="#4a3428")
+
+
+def acc_basket(d, ox, by, hy):
+    """Marigold and jasmine, with a couple of Swedish cornflowers."""
+    del hy
+    d.rectangle([ox + 22, by + 5, ox + 37, by + 15], fill="#c69a5e")
+    for bx in range(ox + 23, ox + 37, 3):
+        d.line([bx, by + 5, bx, by + 15], fill="#a87f48")
+    d.arc([ox + 22, by, ox + 37, by + 11], 180, 360, fill="#a87f48", width=2)
+    for fx, c in ((24, "#f5a623"), (28, "#e8801f"), (32, JASMINE), (35, "#6f9ad4")):
+        d.line([ox + fx, by + 5, ox + fx - 1, by], fill="#4f8a42")
+        d.ellipse([ox + fx - 3, by - 4, ox + fx + 1, by], fill=c)
+
+
+def acc_pillow(d, ox, by, hy):
+    """The ring bearer's cushion, held at chest height."""
+    del hy
+    d.rectangle([ox + 22, by + 2, ox + 36, by + 11], fill="#f7e6ef")
+    d.rectangle([ox + 22, by + 2, ox + 36, by + 4], fill="#fdf5f8")
+    for cx in (ox + 22, ox + 36):
+        d.ellipse([cx - 2, by, cx + 2, by + 4], fill="#f2c9dc")
+        d.ellipse([cx - 2, by + 9, cx + 2, by + 13], fill="#f2c9dc")
+    d.ellipse([ox + 26, by + 3, ox + 32, by + 9], outline="#f5d76b", width=2)
+
+
+def acc_tray(d, ox, by, hy):
+    """Both kitchens on one tray: prinsesstarta and a stack of laddus."""
+    del hy
+    d.rectangle([ox + 21, by + 12, ox + 39, by + 15], fill="#d9d2c4")
+    d.rectangle([ox + 21, by + 15, ox + 39, by + 16], fill="#a8a294")
+    d.pieslice([ox + 22, by + 3, ox + 32, by + 17], 180, 360, fill="#8fc46a")
+    d.pieslice([ox + 24, by + 5, ox + 29, by + 15], 180, 300, fill="#a5d484")
+    d.rectangle([ox + 22, by + 10, ox + 32, by + 12], fill="#f7f3ea")
+    d.ellipse([ox + 25, by, ox + 29, by + 4], fill="#e07a9a")
+    for i, (lx, ly) in enumerate(((34, 8), (37, 8), (35, 4))):
+        d.ellipse([ox + lx, by + ly, ox + lx + 4, by + ly + 4], fill=["#e8a33c", "#f5b955"][i % 2])
+
+
+ACCESSORIES = {
+    "cane": acc_cane,
+    "saree": acc_saree,
+    "nadaswaram": acc_nadaswaram,
+    "basket": acc_basket,
+    "pillow": acc_pillow,
+    "tray": acc_tray,
+}
+
+
+def draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress, accessory):
+    """A chibi character facing RIGHT, art centred in a 40x40 frame."""
     d = ImageDraw.Draw(frame)
-    bob = {"idle": 0, "w1": 0, "w2": 1, "w3": 0, "jump": -2}[pose]
+    ox = BODY_X
+    bob = {"idle": 0, "w1": 0, "w2": 1, "w3": 0, "jump": -2, "blink": 0}[pose]
     pants = shade(outfit2, 0.75)
     shoe = "#4a3c50"
 
     ly = 31 + bob
     if pose == "jump":
-        d.rectangle([12, ly, 15, ly + 4], fill=pants)
-        d.rectangle([17, ly + 1, 20, ly + 5], fill=pants)
-        d.rectangle([12, ly + 4, 16, ly + 6], fill=shoe)
-        d.rectangle([17, ly + 5, 21, ly + 7], fill=shoe)
+        d.rectangle([ox + 12, ly, ox + 15, ly + 4], fill=pants)
+        d.rectangle([ox + 17, ly + 1, ox + 20, ly + 5], fill=pants)
+        d.rectangle([ox + 12, ly + 4, ox + 16, ly + 6], fill=shoe)
+        d.rectangle([ox + 17, ly + 5, ox + 21, ly + 7], fill=shoe)
     elif pose in ("w1", "w3"):
         fwd = pose == "w1"
         bx = 11 if fwd else 15
-        d.rectangle([bx, ly, bx + 3, ly + 6], fill=pants)
-        d.rectangle([bx - 1, ly + 6, bx + 3, ly + 8], fill=shoe)
+        d.rectangle([ox + bx, ly, ox + bx + 3, ly + 6], fill=pants)
+        d.rectangle([ox + bx - 1, ly + 6, ox + bx + 3, ly + 8], fill=shoe)
         fx = 18 if fwd else 14
-        d.rectangle([fx, ly, fx + 3, ly + 6], fill=pants)
-        d.rectangle([fx, ly + 6, fx + 4, ly + 8], fill=shoe)
+        d.rectangle([ox + fx, ly, ox + fx + 3, ly + 6], fill=pants)
+        d.rectangle([ox + fx, ly + 6, ox + fx + 4, ly + 8], fill=shoe)
     else:
-        d.rectangle([13, ly, 16, ly + 6], fill=pants)
-        d.rectangle([17, ly, 20, ly + 6], fill=shade(outfit2, 0.65))
-        d.rectangle([12, ly + 6, 16, ly + 8], fill=shoe)
-        d.rectangle([17, ly + 6, 21, ly + 8], fill=shoe)
+        d.rectangle([ox + 13, ly, ox + 16, ly + 6], fill=pants)
+        d.rectangle([ox + 17, ly, ox + 20, ly + 6], fill=shade(outfit2, 0.65))
+        d.rectangle([ox + 12, ly + 6, ox + 16, ly + 8], fill=shoe)
+        d.rectangle([ox + 17, ly + 6, ox + 21, ly + 8], fill=shoe)
 
     by = 20 + bob
     if dress:
-        d.polygon([(12, by), (21, by), (25, by + 13), (8, by + 13)], fill=outfit)
-        d.polygon([(12, by), (15, by), (11, by + 13), (8, by + 13)], fill=shade(outfit, 0.88))
-        d.line([9, by + 12, 24, by + 12], fill=outfit2)
-        d.line([8, by + 13, 25, by + 13], fill=outfit2)
+        d.polygon([(ox + 12, by), (ox + 21, by), (ox + 25, by + 13), (ox + 8, by + 13)], fill=outfit)
+        d.polygon([(ox + 12, by), (ox + 15, by), (ox + 11, by + 13), (ox + 8, by + 13)],
+                  fill=shade(outfit, 0.88))
+        d.line([ox + 9, by + 12, ox + 24, by + 12], fill=outfit2)
+        d.line([ox + 8, by + 13, ox + 25, by + 13], fill=outfit2)
     else:
-        d.rectangle([11, by, 22, by + 11], fill=outfit)
-        d.rectangle([11, by, 13, by + 11], fill=shade(outfit, 0.85))
-        d.rectangle([11, by + 10, 22, by + 11], fill=outfit2)
-        d.rectangle([15, by, 19, by + 1], fill=outfit2)
+        d.rectangle([ox + 11, by, ox + 22, by + 11], fill=outfit)
+        d.rectangle([ox + 11, by, ox + 13, by + 11], fill=shade(outfit, 0.85))
+        d.rectangle([ox + 11, by + 10, ox + 22, by + 11], fill=outfit2)
+        d.rectangle([ox + 15, by, ox + 19, by + 1], fill=outfit2)
 
+    # front arm
     if pose == "jump":
-        d.rectangle([20, by - 4, 23, by + 3], fill=outfit)
-        d.rectangle([20, by - 7, 23, by - 4], fill=skin)
+        d.rectangle([ox + 20, by - 4, ox + 23, by + 3], fill=outfit)
+        d.rectangle([ox + 20, by - 7, ox + 23, by - 4], fill=skin)
     elif pose in ("w1", "w3"):
         swing = 3 if pose == "w1" else -3
-        d.rectangle([18 + swing // 3, by + 2, 21 + swing // 3, by + 8], fill=outfit)
-        d.rectangle([18 + swing, by + 8, 20 + swing, by + 10], fill=skin)
+        d.rectangle([ox + 18 + swing // 3, by + 2, ox + 21 + swing // 3, by + 8], fill=outfit)
+        d.rectangle([ox + 18 + swing, by + 8, ox + 20 + swing, by + 10], fill=skin)
     else:
-        d.rectangle([19, by + 2, 22, by + 8], fill=shade(outfit, 0.9))
-        d.rectangle([19, by + 8, 21, by + 10], fill=skin)
+        d.rectangle([ox + 19, by + 2, ox + 22, by + 8], fill=shade(outfit, 0.9))
+        d.rectangle([ox + 19, by + 8, ox + 21, by + 10], fill=skin)
 
     hy = 3 + bob
-    d.rounded_rectangle([8, hy, 25, hy + 16], radius=5, fill=skin)
-    d.rounded_rectangle([7, hy - 1, 25, hy + 7], radius=4, fill=hair)
-    d.rectangle([7, hy + 4, 12, hy + 12], fill=hair)
-    d.polygon([(18, hy + 3), (25, hy + 3), (25, hy + 6), (20, hy + 5)], fill=hair)
-    d.line([8, hy + 1, 24, hy + 1], fill=shade(hair, 1.35))
+    d.rounded_rectangle([ox + 8, hy, ox + 25, hy + 16], radius=5, fill=skin)
+    d.rounded_rectangle([ox + 7, hy - 1, ox + 25, hy + 7], radius=4, fill=hair)
+    d.rectangle([ox + 7, hy + 4, ox + 12, hy + 12], fill=hair)
+    d.polygon([(ox + 18, hy + 3), (ox + 25, hy + 3), (ox + 25, hy + 6), (ox + 20, hy + 5)], fill=hair)
+    d.line([ox + 8, hy + 1, ox + 24, hy + 1], fill=shade(hair, 1.35))
     if long_hair:
-        d.rectangle([6, hy + 4, 10, hy + 25], fill=hair)
-        d.rectangle([6, hy + 22, 10, hy + 25], fill=shade(hair, 0.8))
-    d.ellipse([11, hy + 8, 15, hy + 12], fill=skin)
-    d.point((13, hy + 10), fill=shade(skin, 0.8))
-    d.rectangle([20, hy + 8, 21, hy + 11], fill=OUTLINE)
-    d.point((21, hy + 8), fill="#ffffff")
-    d.rectangle([23, hy + 12, 24, hy + 13], fill=shade(skin, 0.85))
-    d.rectangle([21, hy + 13, 23, hy + 13], fill="#b56a5a")
-    d.rectangle([18, hy + 12, 19, hy + 13], fill="#f0a8a8")
+        d.rectangle([ox + 6, hy + 4, ox + 10, hy + 25], fill=hair)
+        d.rectangle([ox + 6, hy + 22, ox + 10, hy + 25], fill=shade(hair, 0.8))
+    d.ellipse([ox + 11, hy + 8, ox + 15, hy + 12], fill=skin)
+    d.point((ox + 13, hy + 10), fill=shade(skin, 0.8))
+    if pose == "blink":
+        d.line([ox + 20, hy + 10, ox + 22, hy + 10], fill=OUTLINE)
+    else:
+        d.rectangle([ox + 20, hy + 8, ox + 21, hy + 11], fill=OUTLINE)
+        d.point((ox + 21, hy + 8), fill="#ffffff")
+    d.rectangle([ox + 23, hy + 12, ox + 24, hy + 13], fill=shade(skin, 0.85))
+    d.rectangle([ox + 21, hy + 13, ox + 23, hy + 13], fill="#b56a5a")
+    d.rectangle([ox + 18, hy + 12, ox + 19, hy + 13], fill="#f0a8a8")
+
+    if accessory:
+        ACCESSORIES[accessory](d, ox, by, hy)
 
 
-def make_character(name, skin, hair, outfit, outfit2, long_hair=False, dress=False):
+def make_character(name, skin, hair, outfit, outfit2, long_hair=False, dress=False, accessory=None):
     sheet = Image.new("RGBA", (FRAME_W * len(POSES), FRAME_H), (0, 0, 0, 0))
     for i, pose in enumerate(POSES):
         frame = Image.new("RGBA", (FRAME_W, FRAME_H), (0, 0, 0, 0))
-        draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress)
+        draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress, accessory)
         outline_sprite(frame)
         sheet.paste(frame, (i * FRAME_W, 0))
     sheet.save(OUT / f"char-{name}.png")
+
+
+# ---------------------------------------------------------------- emotes
+def make_emotes() -> None:
+    """Over-head markers: someone to meet, and someone already met."""
+    talk = Image.new("RGBA", (20, 18), (0, 0, 0, 0))
+    d = ImageDraw.Draw(talk)
+    d.rounded_rectangle([0, 0, 19, 12], radius=4, fill="#fdf9f0")
+    d.polygon([(6, 12), (13, 12), (8, 17)], fill="#fdf9f0")
+    for i in range(3):
+        d.ellipse([4 + i * 5, 5, 6 + i * 5, 7], fill="#4a3428")
+    outline_sprite(talk)
+    talk.save(OUT / "emote-talk.png")
+
+    done = Image.new("RGBA", (20, 18), (0, 0, 0, 0))
+    d = ImageDraw.Draw(done)
+    d.rounded_rectangle([0, 0, 19, 12], radius=4, fill="#fdf9f0")
+    d.polygon([(6, 12), (13, 12), (8, 17)], fill="#fdf9f0")
+    d.ellipse([5, 3, 9, 7], fill="#e0576f")
+    d.ellipse([9, 3, 13, 7], fill="#e0576f")
+    d.polygon([(5, 5), (13, 5), (9, 10)], fill="#e0576f")
+    outline_sprite(done)
+    done.save(OUT / "emote-done.png")
+
+
+def make_dust() -> None:
+    """Puff kicked up on jump and landing."""
+    img = Image.new("RGBA", (16, 12), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.ellipse([2, 3, 11, 11], fill=(232, 220, 200, 235))
+    d.ellipse([7, 1, 15, 9], fill=(244, 236, 220, 220))
+    d.ellipse([0, 6, 6, 12], fill=(220, 206, 186, 200))
+    img.save(OUT / "dust.png")
 
 
 def main() -> None:
@@ -692,14 +820,21 @@ def main() -> None:
     make_pole()
     make_heart_pickup()
     make_shadow()
+    make_emotes()
+    make_dust()
 
-    make_character("groom", "#f2c9a1", "#3b2f2f", "#3d5a80", "#2b4462")
-    make_character("bride", "#f2c9a1", "#6b4a34", "#f7f3ea", "#d8c9b8", long_hair=True, dress=True)
-    make_character("npc-elder", "#e8bd95", "#d8d8d8", "#7a6f5a", "#635a48")
-    make_character("npc-baker", "#f2c9a1", "#a85a2a", "#e0576f", "#b84457")
-    make_character("npc-florist", "#d9a878", "#2f4a2f", "#7fb069", "#628a50", long_hair=True, dress=True)
-    make_character("npc-musician", "#f2c9a1", "#e9c94f", "#9a6fb0", "#7d5591")
-    make_character("npc-kid", "#e8bd95", "#3b2f2f", "#f5a623", "#d98e1b")
+    make_character("groom", "#c98d5e", "#221a18", "#3d5a80", "#2b4462")
+    make_character("bride", "#f0d0b4", "#d9b168", "#f7f3ea", "#d8c9b8", long_hair=True, dress=True)
+    # the two grandmothers, one from each side
+    make_character("npc-mormor", "#f0d5bd", "#e2e0dc", "#6f8ba8", "#5a7189",
+                   long_hair=True, dress=True, accessory="cane")
+    make_character("npc-ammamma", "#b87b4c", "#e8e4e0", "#c9455c", "#a3384b",
+                   long_hair=True, dress=True, accessory="saree")
+    make_character("npc-baker", "#e8bd95", "#a85a2a", "#e0576f", "#b84457", accessory="tray")
+    make_character("npc-florist", "#c98d5e", "#2a2320", "#7fb069", "#628a50",
+                   long_hair=True, dress=True, accessory="basket")
+    make_character("npc-musician", "#b87b4c", "#2a2320", "#f5a623", "#d98e1b", accessory="nadaswaram")
+    make_character("npc-kid", "#d9a878", "#2a2320", "#f5d76b", "#d4b73f", accessory="pillow")
 
     print(f"Assets written to {OUT}")
 

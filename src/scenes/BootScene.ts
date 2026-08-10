@@ -3,7 +3,8 @@ import Phaser from 'phaser';
 const CHAR_SHEETS = [
   'char-groom',
   'char-bride',
-  'char-npc-elder',
+  'char-npc-mormor',
+  'char-npc-ammamma',
   'char-npc-baker',
   'char-npc-florist',
   'char-npc-musician',
@@ -38,21 +39,36 @@ export class BootScene extends Phaser.Scene {
       'pole',
       'heart',
       'shadow',
+      'emote-talk',
+      'emote-done',
+      'dust',
     ]) {
       this.load.image(prop, `assets/${prop}.png`);
     }
     for (const key of CHAR_SHEETS) {
-      this.load.spritesheet(key, `assets/${key}.png`, { frameWidth: 32, frameHeight: 40 });
+      this.load.spritesheet(key, `assets/${key}.png`, { frameWidth: 40, frameHeight: 40 });
     }
   }
 
   create(): void {
-    // Frames per sheet (facing right; left is flipX): 0 idle, 1-3 walk, 4 jump.
+    // Frames per sheet (facing right; left is flipX):
+    // 0 idle, 1-3 walk, 4 jump, 5 blink.
     for (const key of CHAR_SHEETS) {
       this.anims.create({
         key: `${key}-walk`,
         frames: this.anims.generateFrameNumbers(key, { frames: [1, 2, 3, 2] }),
         frameRate: 10,
+        repeat: -1,
+      });
+      // Standing still: hold frame 0, with an occasional blink.
+      this.anims.create({
+        key: `${key}-idle`,
+        frames: [
+          { key, frame: 0, duration: 2600 },
+          { key, frame: 5, duration: 130 },
+          { key, frame: 0, duration: 1700 },
+          { key, frame: 5, duration: 120 },
+        ],
         repeat: -1,
       });
     }

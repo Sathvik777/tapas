@@ -15,7 +15,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     scene.physics.add.existing(this);
     this.setOrigin(0.5, 1);
     this.body!.setSize(16, 34);
-    this.body!.setOffset(8, 6);
+    // art is centred in a 40px frame
+    this.body!.setOffset(12, 6);
     this.setCollideWorldBounds(true);
   }
 
@@ -34,9 +35,20 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     } else if (dir !== 0) {
       this.anims.play(`${this.spriteKey}-walk`, true);
     } else {
-      this.anims.stop();
-      this.setFrame(0);
+      this.anims.play(`${this.spriteKey}-idle`, true);
     }
+  }
+
+  /** Squash on landing — sold with a dust puff by the scene. */
+  squash(): void {
+    this.scene.tweens.add({
+      targets: this,
+      scaleX: 1.18,
+      scaleY: 0.82,
+      duration: 70,
+      yoyo: true,
+      ease: 'Quad.easeOut',
+    });
   }
 
   jump(): boolean {
@@ -47,9 +59,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   halt(): void {
     this.setVelocityX(0);
-    if (this.onGround) {
-      this.anims.stop();
-      this.setFrame(0);
-    }
+    if (this.onGround) this.anims.play(`${this.spriteKey}-idle`, true);
   }
 }

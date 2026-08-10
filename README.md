@@ -53,7 +53,7 @@ build is caught even before Vercel is connected.
 ```
 public/assets/          generated sprites + parallax art (see CREDITS.md)
 scripts/                asset generator (python3 scripts/gen_placeholder_assets.py)
-src/content/wedding.ts  ✏️  all wedding text, NPC dialogue and NPC placement
+src/content/wedding.ts  ✏️  all wedding text, family names, dialogue and placement
 src/world/level.ts      the level: ground profile, platforms, hearts, props
 src/scenes/             boot / title / world scenes
 src/objects/            Player (takes a sprite key, ready for character select), NPC
@@ -74,7 +74,8 @@ being in front of the player. The camera picks an integer zoom that shows about
 - [x] **POC** — walk and jump through the countryside, NPCs share the wedding info, final invitation card
 - [x] Side-view platformer look with layered parallax and higher-resolution art
 - [x] **Detail pass 1** — the walk has a time of day (morning → golden hour) and everything casts a shadow
-- [ ] Detail passes 2-5 — villager props and emotes, an animated world, landmarks and foreground variety, the two of you as the leads
+- [x] **Detail pass 2** — the cast recast as family, each with a prop that says who they are, blinking, landing squash and over-head emotes
+- [ ] Detail passes 3-5 — an animated world, landmarks and foreground variety, the two of you as the leads
 - [ ] Puzzles / quiz about us → earn points (NPC "visited" and heart tracking already in place)
 - [ ] Open leaderboard (needs a small backend — e.g. Supabase or Vercel KV)
 - [ ] Choose your character: groom or bride (`Player` already takes a sprite key)

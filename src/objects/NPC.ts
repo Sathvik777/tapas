@@ -18,7 +18,9 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
     // standing inside it, still trivial to hop over.
     const body = this.body as Phaser.Physics.Arcade.StaticBody;
     body.setSize(26, 30);
-    body.setOffset(3, 10);
+    body.setOffset(7, 10); // art is centred in a 40px frame
+
+    this.play(`${def.sprite}-idle`);
 
     // gentle idle bob so the world feels alive
     scene.tweens.add({
