@@ -14,6 +14,7 @@ import {
   PLAYER_SPAWN_COL,
   SOLID_TILES,
   TILE_SIZE,
+  type ParsedLevel,
   type PropDef,
   type PropType,
 } from '../world/level';
@@ -29,12 +30,15 @@ export class WorldScene extends Phaser.Scene {
   private npcs: NPC[] = [];
   private emotes = new Map<NPC, Phaser.GameObjects.Image>();
   private wasOnGround = true;
+  private decor: Array<{ sprite: Phaser.GameObjects.Image; phase: number }> = [];
   private signpost!: Phaser.GameObjects.Image;
   private indicator!: Phaser.GameObjects.Image;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
   private bgLayers: Array<{ sprite: Phaser.GameObjects.TileSprite; factor: number }> = [];
   private grade: Phaser.FX.ColorMatrix | null = null;
+  private motes?: Phaser.GameObjects.Particles.ParticleEmitter;
+  private petals?: Phaser.GameObjects.Particles.ParticleEmitter;
   private playerShadow!: Phaser.GameObjects.Image;
   private lastGroundY = 0;
   private mood!: Mood;
@@ -131,6 +135,18 @@ export class WorldScene extends Phaser.Scene {
       this.collectHeart(heart as Phaser.Physics.Arcade.Sprite);
     });
 
+    for (const dec of level.decor) {
+      const sprite = this.add
+        .image(dec.tx * TILE_SIZE + TILE_SIZE / 2, (dec.ty + 1) * TILE_SIZE, dec.kind)
+        .setOrigin(0.5, 1)
+        .setDepth(dec.kind === 'flowers' ? 7 : 1);
+      this.decor.push({ sprite, phase: dec.tx * 0.7 });
+    }
+    this.spawnButterflies(level.decor);
+    this.time.addEvent({ delay: 9000, loop: true, callback: () => this.releaseBirds() });
+    this.releaseBirds();
+    this.createAmbientParticles();
+
     this.indicator = this.add.image(0, 0, 'heart').setVisible(false).setDepth(100);
 
     const cam = this.cameras.main;
@@ -205,6 +221,14 @@ export class WorldScene extends Phaser.Scene {
         glowAlpha: this.mood?.glowAlpha,
         lightsOn: this.mood?.lightsOn,
       }),
+      emotes: () =>
+        [...this.emotes].map(([n, e]) => ({
+          npc: n.def.id,
+          tex: e.texture.key,
+          x: Math.round(e.x),
+          y: Math.round(e.y),
+          depth: e.depth,
+        })),
       bg: () =>
         this.bgLayers.map((l) => ({
           key: l.sprite.texture.key,
@@ -244,9 +268,12 @@ export class WorldScene extends Phaser.Scene {
     fill?: boolean;
     ridgeY?: number;
     frac?: number;
+    /** px of self-motion per ms, on top of parallax */
+    drift?: number;
   }> = [
     { key: 'bg-sky', factor: 0.05, depth: -5, fill: true },
     { key: 'bg-sky-dusk', factor: 0.05, depth: -4, fill: true },
+    { key: 'bg-clouds', factor: 0.09, depth: -3.5, ridgeY: 0, frac: 0.02, drift: 0.0026 },
     { key: 'bg-mountains', factor: 0.15, depth: -3, ridgeY: 72, frac: 0.38 },
     { key: 'bg-hills', factor: 0.28, depth: -2, ridgeY: 62, frac: 0.5 },
     { key: 'bg-hedge', factor: 0.45, depth: -1, ridgeY: 40, frac: 0.61 },
@@ -283,7 +310,7 @@ export class WorldScene extends Phaser.Scene {
       const def = sprite.getData('def') as (typeof WorldScene.LAYERS)[number];
       const y = def.fill ? view.y - m : view.y + view.height * def.frac! - def.ridgeY!;
       sprite.setPosition(view.x - m, y);
-      sprite.tilePositionX = view.x * factor;
+      sprite.tilePositionX = view.x * factor + (def.drift ? this.time.now * def.drift : 0);
     }
   }
 
@@ -311,6 +338,102 @@ export class WorldScene extends Phaser.Scene {
       0, 0, b, 0, bloom * 0.02,
       0, 0, 0, 1, 0,
     ]);
+  }
+
+  /** Butterflies hang around the flower patches rather than wandering the level. */
+  private spawnButterflies(decor: ParsedLevel['decor']): void {
+    const patches = decor.filter((d) => d.kind === 'flowers');
+    for (let i = 0; i < patches.length; i += 4) {
+      const patch = patches[i];
+      const x = patch.tx * TILE_SIZE + TILE_SIZE / 2;
+      const y = (patch.ty + 1) * TILE_SIZE - 18;
+      const b = this.add.sprite(x, y, 'butterfly').setDepth(9).play('butterfly-flit');
+      this.tweens.add({
+        targets: b,
+        x: x + Phaser.Math.Between(-26, 26),
+        y: y - Phaser.Math.Between(6, 22),
+        duration: Phaser.Math.Between(1800, 3200),
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+        delay: Phaser.Math.Between(0, 1500),
+      });
+    }
+  }
+
+  /** A flock crosses the sky every so often, ahead of wherever you are. */
+  private releaseBirds(): void {
+    const view = this.cameras.main.worldView;
+    const startX = view.x - 60;
+    const y = view.y + view.height * Phaser.Math.FloatBetween(0.1, 0.34);
+    const count = Phaser.Math.Between(3, 6);
+    for (let i = 0; i < count; i++) {
+      const bird = this.add
+        .sprite(startX - i * 18, y + (i % 3) * 9, 'bird')
+        .setDepth(-2)
+        .setScale(Phaser.Math.FloatBetween(0.8, 1.2))
+        .play('bird-fly');
+      this.tweens.add({
+        targets: bird,
+        x: startX + view.width + 160,
+        y: bird.y - Phaser.Math.Between(10, 40),
+        duration: Phaser.Math.Between(9000, 14000),
+        onComplete: () => bird.destroy(),
+      });
+    }
+  }
+
+  /** Pollen everywhere, petals thickening as the mandap gets closer. */
+  private createAmbientParticles(): void {
+    // The zone reads the camera at emit time, so ambience is always on screen
+    // and never wasted off in the level somewhere.
+    const zone = new Phaser.GameObjects.Particles.Zones.RandomZone({
+      getRandomPoint: (point: Phaser.Types.Math.Vector2Like) => {
+        const v = this.cameras.main.worldView;
+        point.x = Phaser.Math.Between(v.x - 30, v.x + v.width + 30);
+        point.y = Phaser.Math.Between(v.y - 40, v.y + v.height * 0.75);
+        return point;
+      },
+    });
+
+    this.motes = this.add.particles(0, 0, 'mote', {
+      speedX: { min: -6, max: 10 },
+      speedY: { min: -14, max: -3 },
+      lifespan: 5200,
+      quantity: 1,
+      frequency: 260,
+      alpha: { start: 0.85, end: 0 },
+      scale: { min: 0.6, max: 1.3 },
+      emitZone: zone,
+    });
+    this.motes.setDepth(12);
+
+    this.petals = this.add.particles(0, 0, 'petal', {
+      speedX: { min: -20, max: -4 },
+      speedY: { min: 10, max: 26 },
+      lifespan: 6200,
+      quantity: 1,
+      frequency: 420,
+      rotate: { start: 0, end: 320 },
+      alpha: { start: 0.95, end: 0.25 },
+      scale: { min: 0.7, max: 1.15 },
+      emitZone: zone,
+    });
+    this.petals.setDepth(13);
+  }
+
+  private updateParticles(): void {
+    // Petals are a wedding thing: barely there at the start, a drift by the end.
+    const nearness = Phaser.Math.Clamp((this.player.x / this.levelWidth - 0.35) / 0.65, 0, 1);
+    this.petals?.setFrequency(Phaser.Math.Linear(1400, 150, nearness));
+  }
+
+  private updateDecor(): void {
+    // one shared sine keeps the whole meadow moving together, like wind
+    const t = this.time.now / 620;
+    for (const { sprite, phase } of this.decor) {
+      sprite.rotation = Math.sin(t + phase) * 0.055;
+    }
   }
 
   private updateEmotes(): void {
@@ -531,6 +654,8 @@ export class WorldScene extends Phaser.Scene {
     this.wasOnGround = this.player.onGround;
 
     this.updateEmotes();
+    this.updateDecor();
+    this.updateParticles();
 
     const target = this.nearestInteractable();
     this.touch?.setActionVisible(!!target);

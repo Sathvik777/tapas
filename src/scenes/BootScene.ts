@@ -24,7 +24,15 @@ export class BootScene extends Phaser.Scene {
     });
 
     this.load.image('tiles', 'assets/tiles.png');
-    for (const bg of ['bg-sky', 'bg-sky-dusk', 'bg-mountains', 'bg-hills', 'bg-hedge', 'fg-fence']) {
+    for (const bg of [
+      'bg-sky',
+      'bg-sky-dusk',
+      'bg-clouds',
+      'bg-mountains',
+      'bg-hills',
+      'bg-hedge',
+      'fg-fence',
+    ]) {
       this.load.image(bg, `assets/${bg}.png`);
     }
     for (const prop of [
@@ -42,12 +50,18 @@ export class BootScene extends Phaser.Scene {
       'emote-talk',
       'emote-done',
       'dust',
+      'tuft',
+      'flowers',
+      'petal',
+      'mote',
     ]) {
       this.load.image(prop, `assets/${prop}.png`);
     }
     for (const key of CHAR_SHEETS) {
       this.load.spritesheet(key, `assets/${key}.png`, { frameWidth: 40, frameHeight: 40 });
     }
+    this.load.spritesheet('bird', 'assets/bird.png', { frameWidth: 16, frameHeight: 12 });
+    this.load.spritesheet('butterfly', 'assets/butterfly.png', { frameWidth: 12, frameHeight: 10 });
   }
 
   create(): void {
@@ -72,6 +86,19 @@ export class BootScene extends Phaser.Scene {
         repeat: -1,
       });
     }
+    this.anims.create({
+      key: 'bird-fly',
+      frames: this.anims.generateFrameNumbers('bird', { frames: [0, 1, 2, 1] }),
+      frameRate: 9,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: 'butterfly-flit',
+      frames: this.anims.generateFrameNumbers('butterfly', { frames: [0, 1] }),
+      frameRate: 11,
+      repeat: -1,
+    });
+
     this.scene.start('title');
   }
 }

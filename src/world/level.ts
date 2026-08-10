@@ -134,11 +134,18 @@ const FENCES: Array<[number, number]> = [
 
 export const PLAYER_SPAWN_COL = 3;
 
+export interface DecorDef {
+  kind: 'tuft' | 'flowers';
+  tx: number;
+  ty: number;
+}
+
 export interface ParsedLevel {
   width: number;
   height: number;
   data: number[][];
   props: PropDef[];
+  decor: DecorDef[];
   hearts: Array<{ tx: number; ty: number }>;
   /** y pixel of the walkable surface at a column (top edge of the ground tile). */
   surfaceY(tx: number): number;
@@ -175,12 +182,14 @@ export function parseLevel(): ParsedLevel {
       decorated.add(x);
     }
   }
+  // Grass and flowers are sprites rather than tiles so they can sway.
+  const decor: DecorDef[] = [];
   const propCols = new Set(PROPS.flatMap((p) => [p.tx - 1, p.tx, p.tx + 1]));
   for (let x = 2; x < LEVEL_COLS - 2; x += 1) {
     if (decorated.has(x) || propCols.has(x)) continue;
     const h = (x * 37) % 11; // deterministic scatter
-    if (h === 0) data[groundRows[x] - 1][x] = T.FLOWERS;
-    else if (h === 5) data[groundRows[x] - 1][x] = T.TUFT;
+    if (h === 0) decor.push({ kind: 'flowers', tx: x, ty: groundRows[x] - 1 });
+    else if (h === 5) decor.push({ kind: 'tuft', tx: x, ty: groundRows[x] - 1 });
   }
 
   return {
@@ -188,6 +197,7 @@ export function parseLevel(): ParsedLevel {
     height: LEVEL_ROWS,
     data,
     props: PROPS,
+    decor,
     hearts: HEARTS.map(([tx, ty]) => ({ tx, ty })),
     surfaceY: (tx) => groundRows[Math.max(0, Math.min(LEVEL_COLS - 1, tx))] * TILE_SIZE,
     groundRow: (tx) => groundRows[Math.max(0, Math.min(LEVEL_COLS - 1, tx))],

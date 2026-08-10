@@ -219,35 +219,98 @@ def make_sky(pal) -> None:
     for r, c in pal["sun"]:
         d.ellipse([sx - r, sy - r, sx + r, sy + r], fill=c)
 
+    img.save(OUT / pal["name"])
+
+
+def make_clouds() -> None:
+    """Clouds live on their own band so they can drift independently of parallax."""
+    w, h = 1536, 420
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+
     def cloud(cx, cy, s):
         for base in (cx - w, cx, cx + w):  # wrap for seamless tiling
             puffs = [(0, 4, 34, 20), (20, -6, 30, 24), (42, 2, 26, 18), (14, 8, 44, 16)]
             for ex, ey, ew, eh in puffs:
                 d.ellipse(
                     [base + ex * s, cy + (ey + 5) * s, base + (ex + ew) * s, cy + (ey + eh) * s + 5],
-                    fill=pal["cloud_shade"],
+                    fill=(226, 236, 246, 255),
                 )
             for ex, ey, ew, eh in puffs:
                 d.ellipse(
                     [base + ex * s, cy + ey * s, base + (ex + ew) * s, cy + (ey + eh) * s],
-                    fill=pal["cloud_lit"],
+                    fill=(255, 255, 255, 255),
                 )
 
     for cx, cy, s_ in (
         (60, 96, 1.0), (300, 168, 0.75), (470, 60, 1.15), (200, 250, 0.6),
         (700, 120, 0.9), (940, 66, 1.05), (1120, 190, 0.7), (1330, 104, 0.85),
+        (820, 250, 0.65), (1450, 210, 0.8),
     ):
         cloud(cx, cy, s_)
+    img.save(OUT / "bg-clouds.png")
 
-    def bird(bx, by, s=1.0):
-        for base in (bx - w, bx, bx + w):
-            d.arc([base, by, base + int(9 * s), by + int(6 * s)], 200, 340, fill=pal["bird"])
-            d.arc([base + int(8 * s), by, base + int(17 * s), by + int(6 * s)], 200, 340, fill=pal["bird"])
 
-    for bx, by, bs in ((160, 150, 1.0), (420, 120, 0.8), (452, 138, 0.7),
-                       (880, 168, 0.9), (1210, 132, 0.8), (1246, 148, 0.65)):
-        bird(bx, by, bs)
-    img.save(OUT / pal["name"])
+def make_bird() -> None:
+    """3-frame wing cycle: up, level, down."""
+    fw, fh = 16, 12
+    img = Image.new("RGBA", (fw * 3, fh), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    ink = (78, 92, 104, 255)
+    for i, lift in enumerate((-3, 0, 3)):
+        ox = i * fw
+        d.line([ox + 1, 6 + lift, ox + 7, 3], fill=ink, width=2)
+        d.line([ox + 8, 3, ox + 14, 6 + lift], fill=ink, width=2)
+        d.point((ox + 7, 4), fill=ink)
+    img.save(OUT / "bird.png")
+
+
+def make_butterfly() -> None:
+    fw, fh = 12, 10
+    img = Image.new("RGBA", (fw * 2, fh), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    for i, spread in enumerate((4, 2)):
+        ox = i * fw
+        for side in (-1, 1):
+            d.polygon(
+                [(ox + 6, 5), (ox + 6 + side * spread, 5 - spread), (ox + 6 + side * spread, 5 + spread - 1)],
+                fill=(245, 215, 107, 255) if side < 0 else (240, 170, 90, 255),
+            )
+        d.line([ox + 6, 2, ox + 6, 8], fill=(74, 52, 40, 255))
+    img.save(OUT / "butterfly.png")
+
+
+def make_decor() -> None:
+    """Tufts and flowers become sprites so they can sway."""
+    tuft = Image.new("RGBA", (TILE, TILE), (0, 0, 0, 0))
+    d = ImageDraw.Draw(tuft)
+    for tx in (5, 10, 15, 20, 25):
+        hh = random.randint(9, 16)
+        d.line([tx, 31, tx, 31 - hh], fill=GRASS_DARK)
+        d.line([tx, 31, tx - 2, 31 - hh + 4], fill="#5a9c44")
+        d.line([tx, 31, tx + 2, 31 - hh + 3], fill=GRASS)
+    tuft.save(OUT / "tuft.png")
+
+    fl = Image.new("RGBA", (TILE, TILE), (0, 0, 0, 0))
+    d = ImageDraw.Draw(fl)
+    for fx, fy, c in ((7, 20, "#f28bb4"), (17, 16, "#f5d76b"), (25, 22, "#f7f3ea"), (12, 25, "#e0576f")):
+        d.line([fx, fy + 4, fx, fy + 11], fill="#4f8f3d")
+        d.line([fx, fy + 7, fx + 2, fy + 6], fill="#4f8f3d")
+        d.ellipse([fx - 3, fy - 1, fx + 3, fy + 5], fill=c)
+        d.ellipse([fx - 1, fy + 1, fx + 1, fy + 3], fill="#fff7e0")
+    fl.save(OUT / "flowers.png")
+
+
+def make_particles() -> None:
+    petal = Image.new("RGBA", (8, 6), (0, 0, 0, 0))
+    d = ImageDraw.Draw(petal)
+    d.ellipse([0, 0, 7, 5], fill=(242, 139, 180, 255))
+    d.ellipse([1, 1, 5, 4], fill=(250, 190, 212, 255))
+    petal.save(OUT / "petal.png")
+
+    mote = Image.new("RGBA", (4, 4), (0, 0, 0, 0))
+    ImageDraw.Draw(mote).ellipse([0, 0, 3, 3], fill=(255, 248, 208, 255))
+    mote.save(OUT / "mote.png")
 
 
 # ---------------------------------------------------------------- distance layers
@@ -805,6 +868,11 @@ def main() -> None:
     make_tiles()
     make_sky(SKY_DAY)
     make_sky(SKY_DUSK)
+    make_clouds()
+    make_bird()
+    make_butterfly()
+    make_decor()
+    make_particles()
     make_mountains()
     make_hills()
     make_hedge()
