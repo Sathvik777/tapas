@@ -32,18 +32,24 @@ export function injectStylesOnce(): void {
     background: #fdf9f0; color: #4a3428;
     border: 4px solid #4a3428; border-radius: 18px;
     box-shadow: 0 5px 0 rgba(74, 52, 40, 0.4);
-    padding: 20px 20px 18px; font: 17px/1.5 Georgia, serif;
+    padding: 26px 20px 16px; font: 17px/1.5 Georgia, serif;
     min-height: 78px;
+    /* Taps fall through to the full-screen catcher underneath, so the card —
+       right where a thumb rests — advances the dialogue instead of eating it. */
+    pointer-events: none;
   }
   .wq-dialogue .wq-name {
-    position: absolute; top: -15px; left: 20px;
+    /* In flow rather than absolute: a long name wraps to two lines and pushes
+       the text down instead of sitting on top of it. */
+    display: inline-block;
+    margin: -36px 0 10px;
     background: #4a3428; color: #fdf9f0;
-    border-radius: 999px; padding: 4px 16px;
-    font-size: 13px; letter-spacing: 1px; text-transform: uppercase;
+    border-radius: 999px; padding: 5px 16px;
+    font-size: 13px; line-height: 1.35; letter-spacing: 1px; text-transform: uppercase;
   }
   .wq-dialogue .wq-more {
-    position: absolute; right: 16px; bottom: 6px;
-    color: #a08b78; font-size: 13px; animation: wq-blink 1s infinite;
+    display: block; text-align: right; margin-top: 10px;
+    color: #8c7460; font-size: 13px; animation: wq-blink 1.1s infinite;
   }
   @keyframes wq-blink { 50% { opacity: 0.2; } }
   .wq-tapcatcher { position: fixed; inset: 0; z-index: 29; }

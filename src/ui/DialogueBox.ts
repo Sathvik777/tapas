@@ -29,7 +29,7 @@ export class DialogueBox {
     nameEl.textContent = role ? `${name} · ${role}` : name;
     this.textEl = el('div', 'wq-text', this.box);
     const more = el('div', 'wq-more', this.box);
-    more.textContent = '▾ tap';
+    more.textContent = 'tap anywhere to continue ▾';
 
     this.tapCatcher = el('div', 'wq-tapcatcher');
     this.tapCatcher.addEventListener('pointerdown', (e) => {
