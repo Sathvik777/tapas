@@ -442,66 +442,6 @@ def make_tree() -> None:
     img.save(OUT / "tree.png")
 
 
-def make_house() -> None:
-    img = Image.new("RGBA", (128, 112), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rectangle([12, 48, 115, 110], fill="#f4e6cc")
-    d.rectangle([12, 48, 115, 54], fill="#e8d6b6")
-    for x in (12, 62, 112):
-        d.rectangle([x, 48, x + 3, 110], fill="#c4a276")
-    d.rectangle([12, 107, 115, 110], fill="#c4a276")
-    d.polygon([(2, 52), (64, 6), (125, 52)], fill="#c96f5a")
-    d.polygon([(10, 48), (64, 10), (117, 48)], fill="#d97f66")
-    for ry in range(16, 48, 8):
-        d.line([64 - int((ry - 8) * 1.35), ry, 64 + int((ry - 8) * 1.35), ry], fill="#b8604c")
-    d.rectangle([0, 50, 127, 54], fill="#a85a48")
-    d.rectangle([54, 74, 73, 110], fill=WOOD_DARK)
-    d.ellipse([54, 66, 73, 84], fill=WOOD_DARK)
-    d.rectangle([57, 78, 70, 110], fill=WOOD)
-    d.ellipse([57, 70, 70, 86], fill=WOOD)
-    d.point((68, 92), fill="#f5d76b")
-    for wx in (22, 88):
-        d.rectangle([wx, 62, wx + 17, 77], fill="#aadcf0")
-        d.rectangle([wx, 62, wx + 17, 66], fill="#cdeef8")
-        d.rectangle([wx - 1, 61, wx + 18, 62], fill=WOOD_DARK)
-        d.rectangle([wx - 1, 77, wx + 18, 78], fill=WOOD_DARK)
-        d.line([wx + 8, 62, wx + 8, 77], fill=WOOD_DARK)
-        d.line([wx, 70, wx + 17, 70], fill=WOOD_DARK)
-        d.rectangle([wx - 2, 79, wx + 19, 84], fill=WOOD)
-        for fx in range(wx + 1, wx + 17, 4):
-            d.rectangle([fx, 77, fx + 1, 78], fill=random.choice(["#f28bb4", "#e0576f", "#f5d76b"]))
-    cx, cy = 63, 60
-    d.polygon([(cx - 4, cy - 2), (cx, cy + 3), (cx + 4, cy - 2)], fill="#e0576f")
-    d.ellipse([cx - 5, cy - 5, cx - 0, cy - 0], fill="#e0576f")
-    d.ellipse([cx - 0, cy - 5, cx + 5, cy - 0], fill="#e0576f")
-    outline_sprite(img)
-    img.save(OUT / "house.png")
-
-
-def make_arch() -> None:
-    img = Image.new("RGBA", (80, 88), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.arc([8, 4, 71, 68], 180, 360, fill="#f7f3ea", width=9)
-    d.rectangle([8, 36, 16, 86], fill="#f7f3ea")
-    d.rectangle([63, 36, 71, 86], fill="#f7f3ea")
-    d.arc([8, 4, 71, 68], 180, 360, fill="#e8ddc8", width=2)
-    d.line([9, 36, 9, 86], fill="#e8ddc8")
-    d.line([64, 36, 64, 86], fill="#e8ddc8")
-    for ang in range(190, 351, 14):
-        a = math.radians(ang)
-        x = 40 + 31 * math.cos(a)
-        y = 36 + 31 * math.sin(a)
-        c = random.choice(["#f28bb4", "#e0576f", "#f5d76b", "#f7c8d8"])
-        d.ellipse([x - 3, y - 3, x + 3, y + 3], fill=c)
-        d.point((int(x) - 1, int(y) - 1), fill="#fff2f6")
-    for x, y in ((10, 46), (66, 52), (12, 66), (64, 74), (10, 80)):
-        c = random.choice(["#f28bb4", "#e0576f", "#f5d76b"])
-        d.ellipse([x, y, x + 5, y + 5], fill=c)
-        d.point((x + 1, y + 1), fill="#fff2f6")
-    outline_sprite(img)
-    img.save(OUT / "arch.png")
-
-
 def make_signpost() -> None:
     img = Image.new("RGBA", (40, 52), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -626,6 +566,20 @@ def make_pole() -> None:
 
 
 # ---------------------------------------------------------------- lighting helpers
+def make_glow() -> None:
+    """Soft warm halo, faded up as the string lights and lamps come on."""
+    n = 128
+    img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    px = img.load()
+    c = n / 2
+    for y in range(n):
+        for x in range(n):
+            t = (((x - c) ** 2 + (y - c) ** 2) ** 0.5) / c
+            if t < 1:
+                px[x, y] = (255, 214, 150, int(255 * (1 - t) ** 2.4))
+    img.save(OUT / "glow.png")
+
+
 def make_shadow() -> None:
     """Soft contact shadow. Scaled per entity at runtime."""
     w, h = 48, 18
@@ -645,6 +599,294 @@ def make_heart_pickup() -> None:
     d.ellipse([3, 3, 6, 6], fill="#f2a0b4")
     outline_sprite(img)
     img.save(OUT / "heart.png")
+
+
+# ---------------------------------------------------------------- culture props
+# Two vocabularies sharing one road: falu-red cottage, birch, midsummer pole and
+# dala horse from her side; mandap, marigold garlands, banana plants, kolam and
+# brass lamp from his. Neither replaces the other anywhere in the level.
+FALU = "#9c3327"
+FALU_LIGHT = "#b8412f"
+TRIM = "#f4efe4"
+MARIGOLD = ["#f5a623", "#e8801f", "#f5d76b", "#e0576f"]
+JASMINE_W = "#f7f3ea"
+
+
+def sw_cottage():
+    im = Image.new("RGBA", (128, 112), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rectangle([10, 44, 117, 110], fill=FALU)
+    d.rectangle([10, 44, 117, 52], fill=FALU_LIGHT)
+    # white corner boards and eaves — the Falu-red signature
+    d.rectangle([10, 44, 19, 110], fill=TRIM)
+    d.rectangle([108, 44, 117, 110], fill=TRIM)
+    d.rectangle([6, 42, 121, 48], fill=TRIM)
+    d.polygon([(2, 46), (64, 4), (125, 46)], fill="#4a4a52")
+    d.polygon([(8, 44), (64, 10), (120, 44)], fill="#5c5c66")
+    for ry in range(14, 44, 7):
+        d.line([64 - int((ry - 6) * 1.4), ry, 64 + int((ry - 6) * 1.4), ry], fill="#43434b")
+    d.rectangle([84, 6, 94, 26], fill="#b8b0a4")
+    d.rectangle([82, 4, 96, 9], fill="#cfc7bb")
+    # door + windows in white trim
+    d.rectangle([54, 72, 74, 110], fill=TRIM)
+    d.rectangle([57, 76, 71, 110], fill="#3f6b7d")
+    d.point((68, 94), fill="#f5d76b")
+    for wx in (26, 90):
+        d.rectangle([wx - 3, 58, wx + 21, 80], fill=TRIM)
+        d.rectangle([wx, 61, wx + 18, 77], fill="#aadcf0")
+        d.line([wx + 9, 61, wx + 9, 77], fill=TRIM)
+        d.line([wx, 69, wx + 18, 69], fill=TRIM)
+    outline_sprite(im)
+    return im
+
+
+def sw_birch():
+    im = Image.new("RGBA", (64, 104), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rectangle([28, 46, 36, 102], fill="#f2eee4")
+    d.rectangle([28, 46, 30, 102], fill="#dcd6c8")
+    for y in range(52, 100, 9):
+        d.rectangle([29, y, 32 + random.randint(0, 2), y + 2], fill="#4a4238")
+        if y % 18 == 0:
+            d.rectangle([33, y + 4, 35, y + 5], fill="#4a4238")
+    d.polygon([(28, 62), (16, 54), (18, 58), (28, 66)], fill="#e8e2d6")
+    for cx, cy, r, c in ((32, 26, 22, "#8fbf5c"), (18, 34, 13, "#9dcb6a"),
+                         (46, 34, 13, "#9dcb6a"), (32, 18, 15, "#aad978")):
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=c)
+    for _ in range(16):
+        x, y = random.randint(12, 52), random.randint(6, 44)
+        d.point((x, y), fill="#c2e59a")
+    outline_sprite(im)
+    return im
+
+
+def sw_maypole():
+    """Midsommarstång — the midsummer pole, dressed in birch and wildflowers."""
+    im = Image.new("RGBA", (92, 146), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rectangle([42, 10, 50, 144], fill="#7fa04c")
+    d.rectangle([42, 10, 45, 144], fill="#96b862")
+    for y in range(14, 142, 11):  # birch-leaf wrap
+        d.ellipse([38, y, 54, y + 8], fill="#6f9440")
+        d.ellipse([41, y + 1, 51, y + 5], fill="#88ad55")
+    d.rectangle([10, 30, 82, 37], fill="#7fa04c")
+    for x in (10, 78):
+        d.ellipse([x - 2, 26, x + 6, 42], fill="#6f9440")
+    # the two hanging rings
+    for cx in (22, 70):
+        d.line([cx, 36, cx, 52], fill="#6f9440")
+        d.ellipse([cx - 15, 52, cx + 15, 80], outline="#7fa04c", width=5)
+        for i in range(10):
+            a = math.radians(i * 36)
+            fx = cx + math.cos(a) * 15
+            fy = 66 + math.sin(a) * 14
+            d.ellipse([fx - 3, fy - 3, fx + 3, fy + 3],
+                      fill=["#f7f3ea", "#f5d76b", "#6f9ad4", "#f28bb4"][i % 4])
+    for i in range(9):  # crown of flowers on top
+        a = math.radians(i * 40)
+        d.ellipse([46 + math.cos(a) * 14 - 3, 14 + math.sin(a) * 8 - 3,
+                   46 + math.cos(a) * 14 + 3, 14 + math.sin(a) * 8 + 3],
+                  fill=["#f7f3ea", "#f5d76b", "#6f9ad4"][i % 3])
+    outline_sprite(im)
+    return im
+
+
+def sw_dalahorse():
+    im = Image.new("RGBA", (56, 50), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    body = [(8, 40), (10, 22), (18, 16), (30, 15), (38, 8), (46, 6), (50, 12),
+            (46, 20), (44, 30), (46, 46), (38, 46), (36, 32), (20, 32), (18, 46), (10, 46)]
+    d.polygon(body, fill="#c0392b")
+    d.polygon([(36, 10), (44, 4), (46, 12)], fill="#a3302a")
+    d.point((45, 12), fill=(30, 24, 24))
+    # kurbits painting
+    for cx, cy, c in ((20, 22, "#f5d76b"), (28, 26, "#2f6f9e"), (24, 30, "#f4efe4"), (32, 20, "#f5a623")):
+        d.ellipse([cx - 3, cy - 3, cx + 3, cy + 3], fill=c)
+        d.point((cx, cy), fill="#a3302a")
+    d.line([16, 18, 34, 18], fill="#f5d76b", width=2)
+    d.line([12, 34, 12, 44], fill="#2f6f9e")
+    outline_sprite(im)
+    return im
+
+
+def sw_meadow():
+    im = Image.new("RGBA", (72, 34), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    for x in range(2, 70, 5):
+        h = random.randint(10, 20)
+        d.line([x, 33, x + random.randint(-2, 2), 33 - h], fill="#5c9c46")
+    for x, c in ((8, "#6f9ad4"), (22, "#f7f3ea"), (34, "#8f6fc4"), (48, "#6f9ad4"), (62, "#f7f3ea")):
+        y = random.randint(6, 14)
+        d.line([x, 32, x, y], fill="#4f8a42")
+        if c == "#8f6fc4":  # lupine spike
+            for i in range(5):
+                d.ellipse([x - 3, y + i * 3, x + 3, y + 3 + i * 3], fill=c)
+        else:
+            for i in range(6):
+                a = math.radians(i * 60)
+                d.ellipse([x + math.cos(a) * 4 - 2, y + math.sin(a) * 4 - 2,
+                           x + math.cos(a) * 4 + 2, y + math.sin(a) * 4 + 2], fill=c)
+            d.ellipse([x - 2, y - 2, x + 2, y + 2], fill="#f5d76b")
+    outline_sprite(im)
+    return im
+
+
+def in_mandap():
+    im = Image.new("RGBA", (148, 128), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    for px in (8, 32, 108, 132):
+        w = 10 if px in (8, 132) else 8
+        shade = "#d9a45f" if px in (8, 132) else "#c08d5f"
+        d.rectangle([px, 40, px + w, 126], fill=shade)
+        d.rectangle([px, 40, px + 3, 126], fill="#e8b878")
+        for y in range(46, 124, 16):
+            d.rectangle([px - 1, y, px + w + 1, y + 4], fill="#c9455c")
+    d.polygon([(0, 44), (74, 4), (148, 44), (148, 54), (74, 14), (0, 54)], fill="#c9455c")
+    d.polygon([(0, 44), (74, 4), (148, 44), (74, 12)], fill="#e0576f")
+    d.rectangle([66, 0, 82, 8], fill="#f5d76b")
+    d.ellipse([66, -6, 82, 10], fill="#f5d76b")
+    # marigold swags between the pillars
+    for x0, x1, y0, dip in ((18, 116, 52, 22), (42, 140, 60, 18)):
+        prev = None
+        for i in range(25):
+            t = i / 24
+            x = x0 + (x1 - x0) * t
+            y = y0 + math.sin(math.pi * t) * dip
+            if prev:
+                d.line([prev, (x, y)], fill="#c98a2a")
+            prev = (x, y)
+            if i % 2 == 0:
+                d.ellipse([x - 3, y - 3, x + 3, y + 3], fill=MARIGOLD[i // 2 % 4])
+    outline_sprite(im)
+    return im
+
+
+def in_banana():
+    im = Image.new("RGBA", (120, 116), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    anchor = (60, 62)
+    d.rectangle([56, 58, 66, 114], fill="#7fa04c")
+    d.rectangle([56, 58, 59, 114], fill="#96b862")
+    for y in range(64, 112, 12):
+        d.line([56, y, 66, y + 2], fill="#6f9440")
+
+    def leaf(angle, length, thick):
+        # built with its base at canvas centre so rotation pivots there
+        n = length * 2 + 8
+        cv = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+        cd = ImageDraw.Draw(cv)
+        c = n // 2
+        cd.ellipse([c, c - thick // 2, c + length, c + thick // 2], fill="#5c9c46")
+        cd.ellipse([c + 4, c - thick // 2 + 3, c + length - 6, c + thick // 2 - 3], fill="#6faa52")
+        for sx in range(c + 6, c + length - 4, 5):  # split fronds
+            cd.line([sx, c - thick // 2 + 1, sx + 3, c + thick // 2 - 1], fill="#4f8a42")
+        cd.line([c, c, c + length, c], fill="#8fc96c", width=2)
+        return cv.rotate(angle, resample=Image.NEAREST)
+
+    for angle, length, thick in ((62, 40, 20), (28, 48, 22), (-6, 46, 21),
+                                 (-40, 47, 22), (-72, 38, 19), (150, 34, 17), (200, 32, 16)):
+        lf = leaf(angle, length, thick)
+        im.alpha_composite(lf, (anchor[0] - lf.width // 2, anchor[1] - lf.height // 2))
+
+    d = ImageDraw.Draw(im)
+    for i in range(5):
+        d.ellipse([52 + i * 3, 68 + i * 2, 62 + i * 3, 76 + i * 2], fill="#f5c542")
+    outline_sprite(im)
+    return im
+
+
+def in_kolam():
+    """Rice-flour kolam laid on the road at the threshold."""
+    im = Image.new("RGBA", (104, 36), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    cx, cy = 52, 20
+    for r, c in ((44, "#f7f3ea"), (32, "#f5a623"), (20, "#f7f3ea")):
+        d.ellipse([cx - r, cy - r // 2, cx + r, cy + r // 2], outline=c, width=2)
+    for i in range(16):
+        a = math.radians(i * 22.5)
+        x, y = cx + math.cos(a) * 38, cy + math.sin(a) * 17
+        d.ellipse([x - 2, y - 1, x + 2, y + 1], fill="#f7f3ea")
+    for i in range(8):
+        a = math.radians(i * 45)
+        x, y = cx + math.cos(a) * 20, cy + math.sin(a) * 9
+        d.ellipse([x - 4, y - 2, x + 4, y + 2], fill="#e0576f")
+    d.ellipse([cx - 6, cy - 3, cx + 6, cy + 3], fill="#f5a623")
+    d.ellipse([cx - 2, cy - 1, cx + 2, cy + 1], fill="#f7f3ea")
+    return im
+
+
+def in_lamp():
+    """Kuthu vilakku — standing brass lamp."""
+    im = Image.new("RGBA", (36, 76), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.ellipse([4, 62, 32, 74], fill="#c9a227")
+    d.ellipse([8, 64, 28, 70], fill="#e0b93c")
+    d.rectangle([15, 26, 21, 66], fill="#c9a227")
+    d.rectangle([15, 26, 17, 66], fill="#e0b93c")
+    for y in (36, 48):
+        d.ellipse([8, y, 28, y + 7], fill="#d4ad2f")
+    d.polygon([(6, 26), (30, 26), (24, 18), (12, 18)], fill="#e0b93c")
+    d.polygon([(12, 18), (24, 18), (18, 10)], fill="#c9a227")
+    d.ellipse([14, 2, 22, 14], fill="#f5a623")
+    d.ellipse([16, 4, 20, 11], fill="#f7e08a")
+    outline_sprite(im)
+    return im
+
+
+def in_toran():
+    """Mango-leaf and marigold string hung over a doorway."""
+    im = Image.new("RGBA", (112, 34), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    prev = None
+    for i in range(29):
+        t = i / 28
+        x = 2 + 108 * t
+        y = 4 + math.sin(math.pi * t) * 7
+        if prev:
+            d.line([prev, (x, y)], fill="#8a6a3a")
+        prev = (x, y)
+        if i % 2 == 0:
+            d.ellipse([x - 3, y + 2, x + 3, y + 16], fill="#4f8a42")
+            d.ellipse([x - 2, y + 4, x + 1, y + 12], fill="#63a352")
+        else:
+            d.ellipse([x - 3, y + 2, x + 3, y + 8], fill=MARIGOLD[i % 3])
+    outline_sprite(im)
+    return im
+
+
+def in_garland():
+    im = Image.new("RGBA", (128, 44), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    prev = None
+    for i in range(41):
+        t = i / 40
+        x = 2 + 124 * t
+        y = 4 + math.sin(math.pi * t) * 28
+        if prev:
+            d.line([prev, (x, y)], fill="#c98a2a")
+        prev = (x, y)
+        d.ellipse([x - 4, y - 4, x + 4, y + 4], fill=MARIGOLD[i % 4])
+        d.point((x - 1, y - 1), fill="#fff0c0")
+    outline_sprite(im)
+    return im
+
+
+# ------------------------------------------------------------------ sheets
+
+
+
+def make_culture_props() -> None:
+    sw_cottage().save(OUT / "cottage.png")
+    sw_birch().save(OUT / "birch.png")
+    sw_maypole().save(OUT / "maypole.png")
+    sw_dalahorse().save(OUT / "dalahorse.png")
+    sw_meadow().save(OUT / "meadow.png")
+    in_mandap().save(OUT / "mandap.png")
+    in_banana().save(OUT / "banana.png")
+    in_kolam().save(OUT / "kolam.png")
+    in_lamp().save(OUT / "lamp.png")
+    in_toran().save(OUT / "toran.png")
+    in_garland().save(OUT / "garland.png")
 
 
 # ---------------------------------------------------------------- characters
@@ -878,16 +1120,16 @@ def main() -> None:
     make_hedge()
     make_foreground()
     make_tree()
-    make_house()
-    make_arch()
     make_signpost()
     make_cart()
     make_arrow_sign()
     make_rock()
     make_bush()
     make_pole()
+    make_culture_props()
     make_heart_pickup()
     make_shadow()
+    make_glow()
     make_emotes()
     make_dust()
 

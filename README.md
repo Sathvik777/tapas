@@ -66,6 +66,7 @@ public/assets/          generated sprites + parallax art (see CREDITS.md)
 scripts/                asset generator (python3 scripts/gen_placeholder_assets.py)
 src/content/wedding.ts  ✏️  all wedding text, family names, dialogue and placement
 src/world/level.ts      the level: ground profile, platforms, hearts, props
+src/world/daylight.ts   keyframed time-of-day moods driven by level progress
 src/scenes/             boot / title / world scenes
 src/objects/            Player (takes a sprite key, ready for character select), NPC
 src/ui/                 dialogue box, HUD, invitation card, touch controls (DOM-based)
@@ -87,7 +88,9 @@ being in front of the player. The camera picks an integer zoom that shows about
 - [x] **Detail pass 1** — the walk has a time of day (morning → golden hour) and everything casts a shadow
 - [x] **Detail pass 2** — the cast recast as family, each with a prop that says who they are, blinking, landing squash and over-head emotes
 - [x] **Detail pass 3** — a world that moves: drifting clouds, swaying grass, bird flocks, butterflies over the flower patches, and petals thickening as the wedding nears
-- [ ] Detail passes 4-5 — landmarks and foreground variety, the two of you as the leads
+- [x] **Detail pass 4a** — landmarks in both vocabularies: falu-red cottage, birch, midsummer pole and dala horse alongside a mandap, marigold garlands, banana plants, kolam and brass lamps that light up at dusk
+- [ ] Detail pass 4b — foreground variety (stone wall and tall-grass stretches instead of one fence)
+- [ ] Detail pass 5 — the two of you as the playable leads, plus a companion
 - [ ] Puzzles / quiz about us → earn points (NPC "visited" and heart tracking already in place)
 - [ ] Open leaderboard (needs a small backend — e.g. Supabase or Vercel KV)
 - [ ] Choose your character: groom or bride (`Player` already takes a sprite key)

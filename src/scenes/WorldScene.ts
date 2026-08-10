@@ -39,6 +39,7 @@ export class WorldScene extends Phaser.Scene {
   private grade: Phaser.FX.ColorMatrix | null = null;
   private motes?: Phaser.GameObjects.Particles.ParticleEmitter;
   private petals?: Phaser.GameObjects.Particles.ParticleEmitter;
+  private lampGlows: Phaser.GameObjects.Image[] = [];
   private playerShadow!: Phaser.GameObjects.Image;
   private lastGroundY = 0;
   private mood!: Mood;
@@ -323,8 +324,6 @@ export class WorldScene extends Phaser.Scene {
       sprite.setTint(moodTintFor(mood, key));
       if (key === 'bg-sky-dusk') sprite.setAlpha(mood.duskBlend);
     }
-    if (!this.grade) return;
-
     // 4x5 colour matrix: multiply each channel by the grade colour, then lift
     // the warm channels by the bloom amount so golden hour actually glows
     // rather than just going orange.
@@ -332,6 +331,8 @@ export class WorldScene extends Phaser.Scene {
     const g = ((mood.grade >> 8) & 0xff) / 255;
     const b = (mood.grade & 0xff) / 255;
     const bloom = mood.glowAlpha;
+    for (const glow of this.lampGlows) glow.setAlpha(mood.lightsOn * 0.75);
+    if (!this.grade) return;
     this.grade.set([
       r, 0, 0, 0, bloom * 0.18,
       0, g, 0, 0, bloom * 0.09,
@@ -471,15 +472,31 @@ export class WorldScene extends Phaser.Scene {
 
   // ---------------------------------------------------------------- props
   private static readonly PROP_DEPTH: Record<PropType, number> = {
+    kolam: 0.4, // painted on the road itself
     pole: 1,
+    maypole: 1,
     tree: 2,
-    house: 2,
-    arch: 3,
+    birch: 2,
+    cottage: 2,
+    mandap: 3,
+    banana: 5,
     bush: 6,
     rock: 6,
     cart: 6,
     sign: 6,
     signpost: 6,
+    lamp: 6,
+    dalahorse: 6,
+    toran: 6,
+    garland: 6,
+    meadow: 7,
+  };
+
+  /** Props that don't simply stand on the ground: [originY, y offset]. */
+  private static readonly PROP_ANCHOR: Partial<Record<PropType, [number, number]>> = {
+    kolam: [0, 3], // lies flat on the road just below the grass line
+    garland: [0, -134], // strung overhead between the poles
+    toran: [0, -74], // strung along the cottage eaves, above the door
   };
 
   /** Soft contact shadow. Without one, sprites read as stickers on the road. */
@@ -492,20 +509,37 @@ export class WorldScene extends Phaser.Scene {
   private addProp(p: PropDef, surfaceY: number): void {
     const x = p.tx * TILE_SIZE + TILE_SIZE / 2;
     const depth = WorldScene.PROP_DEPTH[p.type];
-    const img = this.add.image(x, surfaceY, p.type).setOrigin(0.5, 1).setDepth(depth);
+    const [originY, dy] = WorldScene.PROP_ANCHOR[p.type] ?? [1, 0];
+    const img = this.add.image(x, surfaceY + dy, p.type).setOrigin(0.5, originY).setDepth(depth);
     if (p.type === 'signpost') this.signpost = img;
+
+    // Lamps carry a halo that fades up with the evening.
+    if (p.type === 'lamp') {
+      this.lampGlows.push(
+        this.add
+          .image(x, surfaceY - img.height * 0.72, 'glow')
+          .setDepth(depth - 0.1)
+          .setBlendMode(Phaser.BlendModes.ADD)
+          .setAlpha(0),
+      );
+    }
 
     // Narrow-footed props cast a shadow the width of their base, not their art.
     const footprint: Partial<Record<PropType, number>> = {
       tree: 30,
+      birch: 26,
       pole: 26,
-      house: 108,
-      arch: 66,
+      maypole: 24,
+      cottage: 108,
+      mandap: 128,
+      banana: 26,
       signpost: 22,
       sign: 26,
       cart: 64,
       bush: 46,
       rock: 34,
+      lamp: 26,
+      dalahorse: 40,
     };
     const w = footprint[p.type];
     if (w) this.addShadow(x, surfaceY, w, Math.max(0.5, depth - 0.5));

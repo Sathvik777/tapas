@@ -28,7 +28,7 @@ export class TitleScene extends Phaser.Scene {
       band('bg-hills', 62, 0.52, 1.5);
       band('bg-hedge', 40, 0.84, 1.6);
 
-      this.add.image(cx, height * 0.5, 'arch').setScale(2.8).setOrigin(0.5, 1);
+      this.add.image(cx, height * 0.5, 'mandap').setScale(2.2).setOrigin(0.5, 1);
 
       this.add
         .text(cx, height * 0.52, `${COUPLE.partner1} ♥ ${COUPLE.partner2}`, {

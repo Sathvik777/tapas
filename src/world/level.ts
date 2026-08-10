@@ -79,49 +79,91 @@ const HEARTS: Array<[number, number]> = [
 ];
 
 export type PropType =
+  // shared countryside
   | 'tree'
-  | 'house'
-  | 'arch'
   | 'signpost'
   | 'cart'
   | 'sign'
   | 'rock'
   | 'bush'
-  | 'pole';
+  | 'pole'
+  // her side
+  | 'cottage'
+  | 'birch'
+  | 'maypole'
+  | 'dalahorse'
+  | 'meadow'
+  // his side
+  | 'mandap'
+  | 'banana'
+  | 'kolam'
+  | 'lamp'
+  | 'toran'
+  | 'garland';
 
 export interface PropDef {
   type: PropType;
   tx: number;
 }
 
+/**
+ * Both vocabularies share the whole road rather than one handing over to the
+ * other: birch grows beside banana, a falu-red cottage wears a mango-leaf
+ * toran, and marigold garlands hang over a midsummer pole. NPC columns
+ * (12, 30, 68, 100, 135, 155) are kept clear so nobody stands inside a prop.
+ */
 const PROPS: PropDef[] = [
+  { type: 'meadow', tx: 2 },
   { type: 'bush', tx: 5 },
-  { type: 'tree', tx: 7 },
+  { type: 'birch', tx: 7 },
+  { type: 'banana', tx: 10 },
   { type: 'sign', tx: 15 },
-  { type: 'rock', tx: 18 },
-  { type: 'pole', tx: 22 },
-  { type: 'house', tx: 26 },
-  { type: 'bush', tx: 33 },
+  { type: 'dalahorse', tx: 18 },
+  { type: 'pole', tx: 21 },
+  { type: 'garland', tx: 22 },
+  { type: 'cottage', tx: 26 },
+  { type: 'toran', tx: 26 },
+  { type: 'kolam', tx: 28 },
+  { type: 'meadow', tx: 33 },
+  { type: 'lamp', tx: 36 },
   { type: 'tree', tx: 41 },
+  { type: 'banana', tx: 44 },
   { type: 'rock', tx: 50 },
+  { type: 'maypole', tx: 55 },
   { type: 'bush', tx: 62 },
   { type: 'pole', tx: 65 },
+  { type: 'garland', tx: 66 },
+  { type: 'meadow', tx: 72 },
+  { type: 'birch', tx: 76 },
   { type: 'tree', tx: 80 },
   { type: 'rock', tx: 84 },
+  { type: 'banana', tx: 88 },
   { type: 'bush', tx: 93 },
   { type: 'cart', tx: 97 },
-  { type: 'tree', tx: 105 },
+  { type: 'lamp', tx: 103 },
+  { type: 'tree', tx: 106 },
+  { type: 'meadow', tx: 109 },
   { type: 'pole', tx: 113 },
-  { type: 'bush', tx: 120 },
+  { type: 'garland', tx: 114 },
+  { type: 'kolam', tx: 117 },
+  { type: 'bush', tx: 121 },
   { type: 'sign', tx: 126 },
   { type: 'rock', tx: 131 },
-  { type: 'tree', tx: 141 },
-  { type: 'bush', tx: 148 },
+  { type: 'banana', tx: 138 },
+  { type: 'birch', tx: 141 },
+  { type: 'tree', tx: 145 },
+  { type: 'meadow', tx: 148 },
   { type: 'pole', tx: 152 },
-  { type: 'tree', tx: 157 },
-  { type: 'bush', tx: 165 },
-  { type: 'arch', tx: 170 },
-  { type: 'signpost', tx: 174 },
+  { type: 'garland', tx: 153 },
+  { type: 'tree', tx: 158 },
+  { type: 'dalahorse', tx: 161 },
+  { type: 'maypole', tx: 164 },
+  { type: 'banana', tx: 167 },
+  { type: 'lamp', tx: 168 },
+  { type: 'mandap', tx: 171 },
+  { type: 'kolam', tx: 171 },
+  { type: 'signpost', tx: 175 },
+  { type: 'lamp', tx: 178 },
 ];
 
 /** Decorative fence runs beside the house and the finale. */
