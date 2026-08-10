@@ -11,6 +11,8 @@ Plays in any browser, desktop or phone (on-screen controls appear on touch devic
 
 ## Play / develop
 
+Node 22 (pinned in `.nvmrc`).
+
 ```bash
 npm install
 npm run dev       # local dev server (add --host to test from your phone)
@@ -33,20 +35,29 @@ your real details.
 
 ## Continuous deployment (Vercel)
 
-One-time setup (~2 minutes):
+Vercel is connected, and **every push to this branch redeploys the same preview URL**:
 
-1. Go to [vercel.com](https://vercel.com) and sign in **with GitHub**.
-2. **Add New… → Project**, import `sathvik777/tapas`.
-3. Vercel auto-detects Vite (`vercel.json` is already configured) — click **Deploy**.
+**https://tapas-git-claude-wedding-game-poc-n3638n-sathvik777s-projects.vercel.app**
 
-After that:
+Keep that link on your phone — it always serves the latest commit on
+`claude/wedding-game-poc-n3638n`, so you can re-test after each change without
+hunting for a new URL. Vercel also comments a link on every pull request.
 
-- every push to `master` deploys the live game to your production URL, and
-- **every pull request gets its own preview URL**, posted as a PR comment by the
-  Vercel bot — open it on your phone to test changes.
+### If the preview asks you to log in
 
-GitHub Actions (`.github/workflows/ci.yml`) also builds every PR, so a broken
-build is caught even before Vercel is connected.
+New Vercel projects protect preview deployments by default, which means anyone
+who is not signed into your Vercel account hits a login wall — including you on a
+phone, and including any guest you send the game to. Turn it off at
+**Vercel → the `tapas` project → Settings → Deployment Protection → Vercel
+Authentication → Disabled**. The preview becomes publicly reachable by URL, which
+is what you want for an invitation (and the repo is public already).
+
+### Why the production URL is empty
+
+Vercel builds production from the repository's default branch, and `master` is
+still the old TAPAS Python fork — there is no `package.json` there, so there is
+nothing for it to build. Merging this branch into `master` makes the production
+URL serve the game. Until then, use the preview URL above.
 
 ## Project layout
 
