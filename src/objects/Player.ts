@@ -1,11 +1,9 @@
 import Phaser from 'phaser';
 
-const SPEED = 90;
-
-export type Facing = 'down' | 'left' | 'right' | 'up';
+const SPEED = 160;
+const JUMP_VELOCITY = 400;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
-  facing: Facing = 'down';
   private spriteKey: string;
 
   // spriteKey is a parameter so the future character-select stage
@@ -16,26 +14,42 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setOrigin(0.5, 1);
-    this.body!.setSize(10, 8);
-    this.body!.setOffset(3, 12);
+    this.body!.setSize(16, 34);
+    this.body!.setOffset(8, 6);
     this.setCollideWorldBounds(true);
   }
 
-  /** vx/vy are a normalized input vector (-1..1). */
-  moveWith(vx: number, vy: number): void {
-    this.setVelocity(vx * SPEED, vy * SPEED);
-    if (vx !== 0 || vy !== 0) {
-      this.facing =
-        Math.abs(vx) >= Math.abs(vy) ? (vx < 0 ? 'left' : 'right') : vy < 0 ? 'up' : 'down';
-      this.anims.play(`${this.spriteKey}-walk-${this.facing}`, true);
+  get onGround(): boolean {
+    return (this.body as Phaser.Physics.Arcade.Body).blocked.down;
+  }
+
+  /** dir: -1 left, 0 stop, 1 right. */
+  moveWith(dir: number): void {
+    this.setVelocityX(dir * SPEED);
+    if (dir !== 0) this.setFlipX(dir < 0);
+
+    if (!this.onGround) {
+      this.anims.stop();
+      this.setFrame(4); // jump pose
+    } else if (dir !== 0) {
+      this.anims.play(`${this.spriteKey}-walk`, true);
     } else {
-      this.anims.play(`${this.spriteKey}-idle-${this.facing}`, true);
+      this.anims.stop();
+      this.setFrame(0);
     }
-    this.setDepth(this.y);
+  }
+
+  jump(): boolean {
+    if (!this.onGround) return false;
+    this.setVelocityY(-JUMP_VELOCITY);
+    return true;
   }
 
   halt(): void {
-    this.setVelocity(0, 0);
-    this.anims.play(`${this.spriteKey}-idle-${this.facing}`, true);
+    this.setVelocityX(0);
+    if (this.onGround) {
+      this.anims.stop();
+      this.setFrame(0);
+    }
   }
 }

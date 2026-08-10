@@ -23,32 +23,36 @@ export class BootScene extends Phaser.Scene {
     });
 
     this.load.image('tiles', 'assets/tiles.png');
-    this.load.image('tree', 'assets/tree.png');
-    this.load.image('house', 'assets/house.png');
-    this.load.image('arch', 'assets/arch.png');
-    this.load.image('signpost', 'assets/signpost.png');
-    this.load.image('heart', 'assets/heart.png');
+    for (const bg of ['bg-sky', 'bg-mountains', 'bg-hills', 'bg-hedge', 'fg-fence']) {
+      this.load.image(bg, `assets/${bg}.png`);
+    }
+    for (const prop of [
+      'tree',
+      'house',
+      'arch',
+      'signpost',
+      'cart',
+      'sign',
+      'rock',
+      'bush',
+      'pole',
+      'heart',
+    ]) {
+      this.load.image(prop, `assets/${prop}.png`);
+    }
     for (const key of CHAR_SHEETS) {
-      this.load.spritesheet(key, `assets/${key}.png`, { frameWidth: 16, frameHeight: 20 });
+      this.load.spritesheet(key, `assets/${key}.png`, { frameWidth: 32, frameHeight: 40 });
     }
   }
 
   create(): void {
-    // Frames are laid out in rows of 3: down, left, right, up.
+    // Frames per sheet (facing right; left is flipX): 0 idle, 1-3 walk, 4 jump.
     for (const key of CHAR_SHEETS) {
-      const dirs = ['down', 'left', 'right', 'up'];
-      dirs.forEach((dir, row) => {
-        const base = row * 3;
-        this.anims.create({
-          key: `${key}-walk-${dir}`,
-          frames: this.anims.generateFrameNumbers(key, { frames: [base + 1, base, base + 2, base] }),
-          frameRate: 8,
-          repeat: -1,
-        });
-        this.anims.create({
-          key: `${key}-idle-${dir}`,
-          frames: [{ key, frame: base }],
-        });
+      this.anims.create({
+        key: `${key}-walk`,
+        frames: this.anims.generateFrameNumbers(key, { frames: [1, 2, 3, 2] }),
+        frameRate: 10,
+        repeat: -1,
       });
     }
     this.scene.start('title');

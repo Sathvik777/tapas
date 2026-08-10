@@ -1,24 +1,26 @@
 import Phaser from 'phaser';
 import type { NpcDef } from '../content/wedding';
-import { TILE_SIZE } from '../world/map';
+import { TILE_SIZE } from '../world/level';
 
 export class NPC extends Phaser.Physics.Arcade.Sprite {
   readonly def: NpcDef;
   visited = false;
 
-  constructor(scene: Phaser.Scene, def: NpcDef) {
+  constructor(scene: Phaser.Scene, def: NpcDef, surfaceY: number) {
     const x = def.tx * TILE_SIZE + TILE_SIZE / 2;
-    const y = def.ty * TILE_SIZE + TILE_SIZE;
-    super(scene, x, y, def.sprite, 0);
+    super(scene, x, surfaceY, def.sprite, 0);
     this.def = def;
     scene.add.existing(this);
     scene.physics.add.existing(this, true);
     this.setOrigin(0.5, 1);
-    (this.body as Phaser.Physics.Arcade.StaticBody).setSize(12, 10);
-    (this.body as Phaser.Physics.Arcade.StaticBody).setOffset(2, 10);
-    this.setDepth(y);
+    this.setDepth(10);
+    // Wide enough that the player halts clear of the sprite rather than
+    // standing inside it, still trivial to hop over.
+    const body = this.body as Phaser.Physics.Arcade.StaticBody;
+    body.setSize(26, 30);
+    body.setOffset(3, 10);
 
-    // gentle idle bob so the village feels alive
+    // gentle idle bob so the world feels alive
     scene.tweens.add({
       targets: this,
       scaleY: { from: 1, to: 0.97 },
@@ -29,13 +31,8 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
     });
   }
 
-  /** Turn to face the player when spoken to. */
+  /** Turn to face the player when spoken to (sprites face right by default). */
   faceTowards(x: number): void {
-    const dx = x - this.x;
-    if (Math.abs(dx) > 6) {
-      this.setFrame(dx < 0 ? 3 : 6);
-    } else {
-      this.setFrame(0);
-    }
+    this.setFlipX(x < this.x);
   }
 }

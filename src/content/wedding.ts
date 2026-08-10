@@ -25,9 +25,8 @@ export interface NpcDef {
   id: string;
   name: string;
   sprite: string;
-  /** tile coordinates in the village map */
+  /** column in the level where this NPC stands (they stand on the ground) */
   tx: number;
-  ty: number;
   pages: string[];
 }
 
@@ -36,8 +35,7 @@ export const NPCS: NpcDef[] = [
     id: 'save-the-date',
     name: 'Granny Rosa',
     sprite: 'char-npc-elder',
-    tx: 6,
-    ty: 9,
+    tx: 12,
     pages: [
       `Oh, a visitor! You must be here for the big day. ${COUPLE.partner1} and ${COUPLE.partner2} are getting married!`,
       `Mark your calendar: ${WEDDING.date}, ${WEDDING.time}. Don't be late — I certainly won't be!`,
@@ -47,8 +45,7 @@ export const NPCS: NpcDef[] = [
     id: 'venue',
     name: 'Baker Bo',
     sprite: 'char-npc-baker',
-    tx: 18,
-    ty: 8,
+    tx: 30,
     pages: [
       `Smell that? I'm baking the wedding cake! The celebration is at ${WEDDING.venue}.`,
       `That's ${WEDDING.address}. ${WEDDING.mapsHint}`,
@@ -58,8 +55,7 @@ export const NPCS: NpcDef[] = [
     id: 'story',
     name: 'Melody',
     sprite: 'char-npc-musician',
-    tx: 20,
-    ty: 15,
+    tx: 68,
     pages: [
       `I'm rehearsing their first-dance song! Want to hear how they met?`,
       `[Write your how-we-met story here — where you first met, the proposal, a fun fact or two.]`,
@@ -70,8 +66,7 @@ export const NPCS: NpcDef[] = [
     id: 'dress-code',
     name: 'Fern the Florist',
     sprite: 'char-npc-florist',
-    tx: 8,
-    ty: 14,
+    tx: 100,
     pages: [
       `These flowers are for the wedding arch! Between you and me, the theme is lovely.`,
       `Dress code: ${WEDDING.dressCode}. You'll fit right into the photos!`,
@@ -81,8 +76,7 @@ export const NPCS: NpcDef[] = [
     id: 'rsvp',
     name: 'Little Pip',
     sprite: 'char-npc-kid',
-    tx: 12,
-    ty: 17,
+    tx: 135,
     pages: [
       `I'm the ring bearer!! I've been practicing walking slowly for WEEKS.`,
       `Oh! Important grown-up stuff: please RSVP by ${WEDDING.rsvpBy} — ${WEDDING.rsvpHow}.`,

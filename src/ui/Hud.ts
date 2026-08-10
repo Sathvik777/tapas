@@ -11,8 +11,23 @@ export class Hud {
     this.toast = el('div', 'wq-toast');
   }
 
+  private visited = 0;
+  private total = 0;
+  private heartCount = 0;
+
   setProgress(visited: number, total: number): void {
-    this.badge.textContent = `💌 ${visited}/${total}`;
+    this.visited = visited;
+    this.total = total;
+    this.render();
+  }
+
+  setHearts(n: number): void {
+    this.heartCount = n;
+    this.render();
+  }
+
+  private render(): void {
+    this.badge.textContent = `💌 ${this.visited}/${this.total} · ❤ ${this.heartCount}`;
   }
 
   showToast(text: string, ms = 3500): void {

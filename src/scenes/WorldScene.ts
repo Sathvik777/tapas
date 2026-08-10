@@ -3,12 +3,22 @@ import { INVITATION_LINES, NPCS, SIGNPOST } from '../content/wedding';
 import { NPC } from '../objects/NPC';
 import { Player } from '../objects/Player';
 import { DialogueBox } from '../ui/DialogueBox';
+import { isTouchDevice } from '../ui/dom';
 import { Hud } from '../ui/Hud';
 import { InvitationCard } from '../ui/InvitationCard';
 import { TouchControls } from '../ui/TouchControls';
-import { parseMap, SOLID_TILES, TILE_SIZE, type PropDef } from '../world/map';
+import {
+  ONE_WAY_TILES,
+  parseLevel,
+  PLAYER_SPAWN_COL,
+  SOLID_TILES,
+  TILE_SIZE,
+  type PropDef,
+  type PropType,
+} from '../world/level';
 
-const INTERACT_RANGE = 26;
+const INTERACT_RANGE = 56;
+const GRAVITY = 900;
 
 export class WorldScene extends Phaser.Scene {
   private player!: Player;
@@ -17,51 +27,110 @@ export class WorldScene extends Phaser.Scene {
   private indicator!: Phaser.GameObjects.Image;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
+  private bgLayers: Array<{ sprite: Phaser.GameObjects.TileSprite; factor: number }> = [];
   private dialogue = new DialogueBox();
   private invitation = new InvitationCard();
   private hud!: Hud;
   private touch!: TouchControls;
   private celebrated = false;
+  private heartCount = 0;
+  private blockedFrames = 0;
+  private hintedJump = false;
 
   constructor() {
     super('world');
   }
 
   create(): void {
-    const parsed = parseMap();
+    const level = parseLevel();
+    const levelW = level.width * TILE_SIZE;
+    const levelH = level.height * TILE_SIZE;
+
+    this.physics.world.gravity.y = GRAVITY;
+    this.physics.world.setBounds(0, -levelH * 2, levelW, levelH * 3);
+
+    this.createBackground();
+
     const map = this.make.tilemap({
-      data: parsed.data,
+      data: level.data,
       tileWidth: TILE_SIZE,
       tileHeight: TILE_SIZE,
     });
     const tileset = map.addTilesetImage('tiles', 'tiles', TILE_SIZE, TILE_SIZE, 0, 0)!;
     const layer = map.createLayer(0, tileset, 0, 0)!;
+    layer.setDepth(5);
     layer.setCollision(SOLID_TILES);
+    // one-way platforms: collide only when landing from above
+    layer.forEachTile((tile) => {
+      if (ONE_WAY_TILES.includes(tile.index as (typeof ONE_WAY_TILES)[number])) {
+        tile.setCollision(false, false, true, false);
+      }
+    });
 
-    const propBodies: Phaser.GameObjects.Rectangle[] = [];
-    for (const p of parsed.props) this.addProp(propBodies, p);
+    for (const p of level.props) this.addProp(p, level.surfaceY(p.tx));
 
-    this.player = new Player(this, 14.5 * TILE_SIZE, 18.5 * TILE_SIZE);
-    this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    this.player = new Player(
+      this,
+      PLAYER_SPAWN_COL * TILE_SIZE + TILE_SIZE / 2,
+      level.surfaceY(PLAYER_SPAWN_COL),
+    );
+    this.player.setDepth(20);
     this.physics.add.collider(this.player, layer);
-    this.physics.add.collider(this.player, propBodies);
 
     for (const def of NPCS) {
-      const npc = new NPC(this, def);
+      const npc = new NPC(this, def, level.surfaceY(def.tx));
       this.npcs.push(npc);
       this.physics.add.collider(this.player, npc);
       npc.setInteractive({ useHandCursor: true });
       npc.on('pointerdown', () => this.tryInteract(npc));
     }
 
-    this.indicator = this.add.image(0, 0, 'heart').setVisible(false).setDepth(100000);
+    // heart pickups
+    const hearts = this.physics.add.staticGroup();
+    for (const h of level.hearts) {
+      const s = hearts.create(
+        h.tx * TILE_SIZE + TILE_SIZE / 2,
+        h.ty * TILE_SIZE + TILE_SIZE / 2,
+        'heart',
+      ) as Phaser.Physics.Arcade.Sprite;
+      s.setDepth(8);
+      this.tweens.add({
+        targets: s,
+        y: s.y - 5,
+        duration: 700 + Math.random() * 300,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+        onUpdate: () => (s.body as Phaser.Physics.Arcade.StaticBody)?.updateFromGameObject(),
+      });
+    }
+    this.physics.add.overlap(this.player, hearts, (_p, heart) => {
+      this.collectHeart(heart as Phaser.Physics.Arcade.Sprite);
+    });
+
+    this.indicator = this.add.image(0, 0, 'heart').setVisible(false).setDepth(100);
 
     const cam = this.cameras.main;
-    cam.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-    cam.startFollow(this.player, true, 0.12, 0.12);
+    cam.setBounds(0, -2000, levelW, 2000 + levelH); // generous sky above
+    cam.startFollow(this.player, true, 0.15, 0.12);
     const applyZoom = () => {
-      const minDim = Math.min(this.scale.width, this.scale.height);
-      cam.setZoom(minDim >= 1200 ? 4 : 3);
+      // Integer zoom keeps the pixel art crisp. Pick the one that shows about
+      // TARGET_VIEW_H of world vertically, but never so much that the view
+      // gets narrower than MIN_VIEW_W (which happens on phones held upright).
+      const TARGET_VIEW_H = 260;
+      const MIN_VIEW_W = 300;
+      const { width, height } = this.scale;
+      const zoom = Phaser.Math.Clamp(
+        Math.min(Math.round(height / TARGET_VIEW_H), Math.max(1, Math.floor(width / MIN_VIEW_W))),
+        1,
+        3,
+      );
+      cam.setZoom(zoom);
+      // Sit the player ~70% down the frame: sky and hills above, road and
+      // fence below — the framing the reference art leans on.
+      cam.setFollowOffset(0, cam.displayHeight * 0.2);
+      cam.setDeadzone(cam.displayWidth * 0.14, cam.displayHeight * 0.22);
+      this.layoutBackground();
     };
     applyZoom();
     this.scale.on('resize', applyZoom);
@@ -70,18 +139,46 @@ export class WorldScene extends Phaser.Scene {
     this.cursors = kb.createCursorKeys();
     this.wasd = kb.addKeys('W,A,S,D') as WorldScene['wasd'];
     kb.on('keydown-E', () => this.onAction());
-    kb.on('keydown-SPACE', () => this.onAction());
     kb.on('keydown-ENTER', () => this.onAction());
+    // Space & Up jump — but they advance dialogue when it's open
+    const jumpOrAdvance = () => {
+      if (this.uiOpen) this.onAction();
+      else this.player.jump();
+    };
+    kb.on('keydown-SPACE', jumpOrAdvance);
+    kb.on('keydown-UP', jumpOrAdvance);
+    kb.on('keydown-W', jumpOrAdvance);
 
     this.hud = new Hud();
     this.hud.setProgress(0, NPCS.length);
-    this.hud.showToast('Explore the village — the neighbors have news for you! 💬');
-    this.touch = new TouchControls(() => this.onAction());
+    this.hud.showToast('Head right! Your neighbors have wedding news 💬 →');
+    if (isTouchDevice() && this.scale.height > this.scale.width) {
+      this.time.delayedCall(4000, () =>
+        this.hud.showToast('Tip: rotate your phone for the best view 📱↻'),
+      );
+    }
+    this.touch = new TouchControls(
+      () => {
+        if (!this.uiOpen) this.player.jump();
+      },
+      () => this.onAction(),
+    );
 
     // Debug/test hook (also handy in the browser console on previews)
     (window as unknown as Record<string, unknown>).__wq = {
       player: () => ({ x: this.player.x, y: this.player.y }),
       visited: () => this.visitedCount(),
+      hearts: () => this.heartCount,
+      bg: () =>
+        this.bgLayers.map((l) => ({
+          key: l.sprite.texture.key,
+          x: l.sprite.x,
+          y: l.sprite.y,
+          w: l.sprite.width,
+          h: l.sprite.height,
+          depth: l.sprite.depth,
+          visible: l.sprite.visible,
+        })),
     };
 
     this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -93,26 +190,105 @@ export class WorldScene extends Phaser.Scene {
     });
   }
 
-  private addProp(bodies: Phaser.GameObjects.Rectangle[], p: PropDef): void {
-    const x = p.tx * TILE_SIZE + TILE_SIZE / 2;
-    const y = p.ty * TILE_SIZE + TILE_SIZE;
-    const img = this.add.image(x, y, p.type).setOrigin(0.5, 1).setDepth(y);
-    if (p.type === 'signpost') this.signpost = img;
-    if (p.type === 'arch') return; // walk beneath the arch freely
+  // ---------------------------------------------------------------- background
+  // Parallax layers are plain world objects re-anchored to the camera's
+  // worldView every frame (robust under zoom, unlike scrollFactor tricks),
+  // oversized by a margin so the one-frame follow lag never shows an edge.
+  //
+  // Each band is anchored by its *ridge line* — the y inside the art where its
+  // horizon sits — placed at a fraction of the view height, so the horizon
+  // stack holds together at any zoom or aspect ratio. `fg-fence` uses a factor
+  // above 1 so it slides past faster than the world: the foreground depth cue.
+  private static readonly BG_MARGIN = 64;
 
-    // Physics bodies hug the base of each prop so the player can walk "behind" them.
-    const sizes: Record<PropDef['type'], [number, number]> = {
-      tree: [12, 10],
-      house: [60, 24],
-      arch: [0, 0],
-      signpost: [12, 6],
-    };
-    const [bw, bh] = sizes[p.type];
-    const rect = this.add.rectangle(x, y - bh / 2, bw, bh).setVisible(false);
-    this.physics.add.existing(rect, true);
-    bodies.push(rect);
+  private static readonly LAYERS: Array<{
+    key: string;
+    factor: number;
+    depth: number;
+    fill?: boolean;
+    ridgeY?: number;
+    frac?: number;
+  }> = [
+    { key: 'bg-sky', factor: 0.05, depth: -4, fill: true },
+    { key: 'bg-mountains', factor: 0.15, depth: -3, ridgeY: 72, frac: 0.38 },
+    { key: 'bg-hills', factor: 0.28, depth: -2, ridgeY: 62, frac: 0.5 },
+    { key: 'bg-hedge', factor: 0.45, depth: -1, ridgeY: 40, frac: 0.61 },
+    { key: 'fg-fence', factor: 1.25, depth: 40, ridgeY: 0, frac: 0.8 },
+  ];
+
+  private createBackground(): void {
+    for (const def of WorldScene.LAYERS) {
+      const sprite = this.add.tileSprite(0, 0, 8, 8, def.key).setOrigin(0, 0).setDepth(def.depth);
+      // TileSprites swap in an internal cloned texture, so capture the
+      // source image height of the *loaded* texture up front.
+      sprite.setData('texH', this.textures.get(def.key).getSourceImage().height);
+      sprite.setData('def', def);
+      this.bgLayers.push({ sprite, factor: def.factor });
+    }
   }
 
+  private layoutBackground(): void {
+    const cam = this.cameras.main;
+    const m = WorldScene.BG_MARGIN;
+    const w = Math.ceil(cam.displayWidth) + m * 2;
+    for (const { sprite } of this.bgLayers) {
+      const def = sprite.getData('def') as (typeof WorldScene.LAYERS)[number];
+      const texH = sprite.getData('texH') as number;
+      sprite.setSize(w, def.fill ? Math.min(texH, Math.ceil(cam.displayHeight) + m * 2) : texH);
+    }
+    this.updateBackground();
+  }
+
+  private updateBackground(): void {
+    const view = this.cameras.main.worldView;
+    const m = WorldScene.BG_MARGIN;
+    for (const { sprite, factor } of this.bgLayers) {
+      const def = sprite.getData('def') as (typeof WorldScene.LAYERS)[number];
+      const y = def.fill ? view.y - m : view.y + view.height * def.frac! - def.ridgeY!;
+      sprite.setPosition(view.x - m, y);
+      sprite.tilePositionX = view.x * factor;
+    }
+  }
+
+  // ---------------------------------------------------------------- props
+  private static readonly PROP_DEPTH: Record<PropType, number> = {
+    pole: 1,
+    tree: 2,
+    house: 2,
+    arch: 3,
+    bush: 6,
+    rock: 6,
+    cart: 6,
+    sign: 6,
+    signpost: 6,
+  };
+
+  private addProp(p: PropDef, surfaceY: number): void {
+    const x = p.tx * TILE_SIZE + TILE_SIZE / 2;
+    const img = this.add
+      .image(x, surfaceY, p.type)
+      .setOrigin(0.5, 1)
+      .setDepth(WorldScene.PROP_DEPTH[p.type]);
+    if (p.type === 'signpost') this.signpost = img;
+  }
+
+  // ---------------------------------------------------------------- hearts
+  private collectHeart(heart: Phaser.Physics.Arcade.Sprite): void {
+    if (!heart.active) return;
+    heart.disableBody(true, false);
+    this.heartCount++;
+    this.hud.setHearts(this.heartCount);
+    this.tweens.add({
+      targets: heart,
+      y: heart.y - 24,
+      alpha: 0,
+      scale: 1.6,
+      duration: 350,
+      onComplete: () => heart.destroy(),
+    });
+  }
+
+  // ---------------------------------------------------------------- interaction
   private get uiOpen(): boolean {
     return this.dialogue.isOpen || this.invitation.isOpen;
   }
@@ -159,7 +335,6 @@ export class WorldScene extends Phaser.Scene {
     this.player.halt();
     npc.faceTowards(this.player.x);
     this.dialogue.show(npc.def.name, npc.def.pages, () => {
-      npc.setFrame(0);
       if (!npc.visited) {
         npc.visited = true;
         this.hud.setProgress(this.visitedCount(), this.npcs.length);
@@ -184,47 +359,54 @@ export class WorldScene extends Phaser.Scene {
   private checkCompletion(): void {
     if (this.celebrated || this.visitedCount() < this.npcs.length) return;
     this.celebrated = true;
-    this.hud.showToast('✨ You met everyone! Read the signpost by the wedding arch. ✨', 6000);
-    this.add.particles(this.signpost.x, this.signpost.y - 20, 'heart', {
-      speed: { min: 15, max: 45 },
-      lifespan: 1800,
-      quantity: 1,
-      frequency: 160,
-      scale: { start: 1, end: 0 },
-      gravityY: -25,
-    });
+    this.hud.showToast('✨ You met everyone! Read the signpost by the wedding arch → ✨', 6000);
+    this.add
+      .particles(this.signpost.x, this.signpost.y - 30, 'heart', {
+        speed: { min: 20, max: 55 },
+        lifespan: 1800,
+        quantity: 1,
+        frequency: 150,
+        scale: { start: 0.8, end: 0 },
+        gravityY: -30,
+      })
+      .setDepth(90);
   }
 
+  // ---------------------------------------------------------------- loop
   update(): void {
+    this.updateBackground();
+
     if (this.uiOpen) {
       this.player.halt();
       this.indicator.setVisible(false);
+      this.touch?.setActionVisible(false);
       return;
     }
 
-    let vx = 0;
-    let vy = 0;
-    if (this.cursors.left.isDown || this.wasd.A.isDown) vx = -1;
-    else if (this.cursors.right.isDown || this.wasd.D.isDown) vx = 1;
-    if (this.cursors.up.isDown || this.wasd.W.isDown) vy = -1;
-    else if (this.cursors.down.isDown || this.wasd.S.isDown) vy = 1;
-    if (vx === 0 && vy === 0 && this.touch) {
-      vx = this.touch.vector.x;
-      vy = this.touch.vector.y;
+    let dir = 0;
+    if (this.cursors.left.isDown || this.wasd.A.isDown || this.touch?.state.left) dir = -1;
+    else if (this.cursors.right.isDown || this.wasd.D.isDown || this.touch?.state.right) dir = 1;
+    this.player.moveWith(dir);
+
+    // NPCs are solid so you stop beside them rather than standing inside them.
+    // First time someone pushes against one, teach the hop.
+    const touching = this.player.body as Phaser.Physics.Arcade.Body;
+    if (dir !== 0 && (touching.touching.left || touching.touching.right)) {
+      if (!this.hintedJump && ++this.blockedFrames > 40) {
+        this.hintedJump = true;
+        this.hud.showToast('Hop over with Space / ⤒');
+      }
+    } else {
+      this.blockedFrames = 0;
     }
-    const len = Math.hypot(vx, vy);
-    if (len > 1) {
-      vx /= len;
-      vy /= len;
-    }
-    this.player.moveWith(vx, vy);
 
     const target = this.nearestInteractable();
+    this.touch?.setActionVisible(!!target);
     if (target) {
       const obj = target === 'signpost' ? this.signpost : target;
-      const bob = Math.sin(this.time.now / 220) * 2;
+      const bob = Math.sin(this.time.now / 220) * 3;
       this.indicator.setVisible(true);
-      this.indicator.setPosition(obj.x, obj.y - obj.displayHeight - 6 + bob);
+      this.indicator.setPosition(obj.x, obj.y - obj.displayHeight - 12 + bob);
     } else {
       this.indicator.setVisible(false);
     }

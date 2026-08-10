@@ -1,19 +1,39 @@
 # Asset credits
 
-All sprites in this folder are **generated placeholders**, produced by
-`scripts/gen_placeholder_assets.py` in this repository. They are original
-to this project and free to use with it.
+Every sprite and background in this folder is **generated**, produced by
+`scripts/gen_placeholder_assets.py` in this repository. They are original to
+this project — no third-party pack is redistributed here, so the repo can stay
+public without licensing worries.
 
-## Upgrading to Sprout Lands
+Regenerate any time with:
 
-The game was designed with the [Sprout Lands asset pack by Cup Nooble](https://cupnooble.itch.io/sprout-lands-asset-pack)
-in mind (cozy top-down farm/village style). To upgrade:
+```bash
+pip install pillow
+python3 scripts/gen_placeholder_assets.py
+```
 
-1. Download the pack from itch.io (free version requires crediting Cup Nooble;
-   check the license — redistributing the raw assets is not allowed, which
-   includes committing them to a **public** repo. Consider making the repo
-   private first, or buying the premium pack and reviewing its terms).
-2. Replace the PNGs in this folder (keep the same filenames, or update
-   `src/scenes/BootScene.ts` frame sizes to match the pack's sprite sheets).
-3. Add the credit line "Art: Sprout Lands by Cup Nooble" to the title screen
-   and README.
+## What's here
+
+| File | Role |
+| --- | --- |
+| `tiles.png` | 32×32 terrain tiles: ground, dirt, one-way platforms, flowers, tufts, fence |
+| `bg-sky.png` | Sky gradient with clouds, birds and a sun (1536px wide so it doesn't repeat on screen) |
+| `bg-mountains.png` / `bg-hills.png` / `bg-hedge.png` | Parallax bands, hazier and bluer with distance |
+| `fg-fence.png` | Foreground fence + grass bank that scrolls *faster* than the world |
+| `char-*.png` | 32×40 side-view characters, 5 frames: idle, 3× walk, jump |
+| `tree/house/arch/signpost/cart/sign/rock/bush/pole/heart` | World props |
+
+## Art direction
+
+The look follows [Milki Delivery](https://dodoot.itch.io/milki-delivery-demo):
+layered parallax with atmospheric perspective, a foreground layer passing in
+front of the player, chunky dark outlines, and cozy outlined UI cards.
+
+## Swapping in a bought/commissioned pack
+
+Replace the PNGs keeping the same filenames, then adjust the frame size in
+`src/scenes/BootScene.ts` (characters are loaded as 32×40 spritesheets) and the
+ridge anchors in `WorldScene.LAYERS` if your background bands put the horizon
+at a different height. If you use a pack such as Sprout Lands, check its
+license first — most free packs allow use with credit but **not**
+redistribution, which committing them to a public repo would count as.
