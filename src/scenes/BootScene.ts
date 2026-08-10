@@ -23,7 +23,7 @@ export class BootScene extends Phaser.Scene {
     });
 
     this.load.image('tiles', 'assets/tiles.png');
-    for (const bg of ['bg-sky', 'bg-mountains', 'bg-hills', 'bg-hedge', 'fg-fence']) {
+    for (const bg of ['bg-sky', 'bg-sky-dusk', 'bg-mountains', 'bg-hills', 'bg-hedge', 'fg-fence']) {
       this.load.image(bg, `assets/${bg}.png`);
     }
     for (const prop of [
@@ -37,6 +37,7 @@ export class BootScene extends Phaser.Scene {
       'bush',
       'pole',
       'heart',
+      'shadow',
     ]) {
       this.load.image(prop, `assets/${prop}.png`);
     }

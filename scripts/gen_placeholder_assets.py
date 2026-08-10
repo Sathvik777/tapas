@@ -14,7 +14,7 @@ import math
 import random
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
 OUT = Path(__file__).resolve().parent.parent / "public" / "assets"
 TILE = 32
@@ -176,11 +176,35 @@ def make_tiles() -> None:
 
 
 # ---------------------------------------------------------------- sky
-def make_sky() -> None:
+SKY_DAY = dict(
+    name="bg-sky.png",
+    stops=[(92, 168, 217), (170, 216, 238), (226, 241, 240)],
+    sun=[(40, (186, 214, 235)), (32, (243, 240, 220)), (26, (255, 246, 205))],
+    sun_at=(1150, 66),
+    cloud_lit=(252, 253, 255),
+    cloud_shade=(214, 230, 243),
+    bird=(96, 118, 134),
+)
+
+# Golden hour cross-fades in over the last third of the walk. Multiply-tinting
+# the day sky can only darken it (blue x orange = brown), so dusk is its own
+# texture with the clouds in the same places for a clean blend.
+SKY_DUSK = dict(
+    name="bg-sky-dusk.png",
+    stops=[(86, 78, 140), (214, 118, 126), (255, 198, 122)],
+    sun=[(96, (247, 168, 104)), (66, (255, 206, 132)), (44, (255, 243, 205))],
+    sun_at=(1150, 150),
+    cloud_lit=(255, 214, 170),
+    cloud_shade=(188, 122, 138),
+    bird=(92, 62, 84),
+)
+
+
+def make_sky(pal) -> None:
     w, h = 1536, 800
     img = Image.new("RGBA", (w, h))
     d = ImageDraw.Draw(img)
-    top, mid, low = (92, 168, 217), (170, 216, 238), (226, 241, 240)
+    top, mid, low = pal["stops"]
     horizon = 440
     for y in range(h):
         if y < horizon * 0.5:
@@ -191,22 +215,22 @@ def make_sky() -> None:
             c = low
         d.line([0, y, w, y], fill=c)
 
-    # sun with a soft halo
-    for r, c in ((40, (186, 214, 235)), (32, (243, 240, 220)), (26, (255, 246, 205))):
-        d.ellipse([1150 - r, 66 - r, 1150 + r, 66 + r], fill=c)
+    sx, sy = pal["sun_at"]
+    for r, c in pal["sun"]:
+        d.ellipse([sx - r, sy - r, sx + r, sy + r], fill=c)
 
     def cloud(cx, cy, s):
         for base in (cx - w, cx, cx + w):  # wrap for seamless tiling
             puffs = [(0, 4, 34, 20), (20, -6, 30, 24), (42, 2, 26, 18), (14, 8, 44, 16)]
-            for ex, ey, ew, eh in puffs:  # shaded underside
+            for ex, ey, ew, eh in puffs:
                 d.ellipse(
-                    [base + ex * s, (cy + ey + 5) * 1 + 0, base + (ex + ew) * s, cy + (ey + eh) * s + 5],
-                    fill=(214, 230, 243),
+                    [base + ex * s, cy + (ey + 5) * s, base + (ex + ew) * s, cy + (ey + eh) * s + 5],
+                    fill=pal["cloud_shade"],
                 )
             for ex, ey, ew, eh in puffs:
                 d.ellipse(
                     [base + ex * s, cy + ey * s, base + (ex + ew) * s, cy + (ey + eh) * s],
-                    fill=(252, 253, 255),
+                    fill=pal["cloud_lit"],
                 )
 
     for cx, cy, s_ in (
@@ -217,13 +241,13 @@ def make_sky() -> None:
 
     def bird(bx, by, s=1.0):
         for base in (bx - w, bx, bx + w):
-            d.arc([base, by, base + int(9 * s), by + int(6 * s)], 200, 340, fill=(96, 118, 134))
-            d.arc([base + int(8 * s), by, base + int(17 * s), by + int(6 * s)], 200, 340, fill=(96, 118, 134))
+            d.arc([base, by, base + int(9 * s), by + int(6 * s)], 200, 340, fill=pal["bird"])
+            d.arc([base + int(8 * s), by, base + int(17 * s), by + int(6 * s)], 200, 340, fill=pal["bird"])
 
     for bx, by, bs in ((160, 150, 1.0), (420, 120, 0.8), (452, 138, 0.7),
                        (880, 168, 0.9), (1210, 132, 0.8), (1246, 148, 0.65)):
         bird(bx, by, bs)
-    img.save(OUT / "bg-sky.png")
+    img.save(OUT / pal["name"])
 
 
 # ---------------------------------------------------------------- distance layers
@@ -538,6 +562,17 @@ def make_pole() -> None:
     img.save(OUT / "pole.png")
 
 
+# ---------------------------------------------------------------- lighting helpers
+def make_shadow() -> None:
+    """Soft contact shadow. Scaled per entity at runtime."""
+    w, h = 48, 18
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.ellipse([4, 3, w - 5, h - 4], fill=(34, 26, 30, 205))
+    img = img.filter(ImageFilter.GaussianBlur(2.2))
+    img.save(OUT / "shadow.png")
+
+
 def make_heart_pickup() -> None:
     img = Image.new("RGBA", (20, 18), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -640,7 +675,8 @@ def make_character(name, skin, hair, outfit, outfit2, long_hair=False, dress=Fal
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     make_tiles()
-    make_sky()
+    make_sky(SKY_DAY)
+    make_sky(SKY_DUSK)
     make_mountains()
     make_hills()
     make_hedge()
@@ -655,6 +691,7 @@ def main() -> None:
     make_bush()
     make_pole()
     make_heart_pickup()
+    make_shadow()
 
     make_character("groom", "#f2c9a1", "#3b2f2f", "#3d5a80", "#2b4462")
     make_character("bride", "#f2c9a1", "#6b4a34", "#f7f3ea", "#d8c9b8", long_hair=True, dress=True)

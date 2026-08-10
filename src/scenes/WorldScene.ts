@@ -7,6 +7,7 @@ import { isTouchDevice } from '../ui/dom';
 import { Hud } from '../ui/Hud';
 import { InvitationCard } from '../ui/InvitationCard';
 import { TouchControls } from '../ui/TouchControls';
+import { moodAt, moodTintFor, type Mood } from '../world/daylight';
 import {
   ONE_WAY_TILES,
   parseLevel,
@@ -19,6 +20,9 @@ import {
 
 const INTERACT_RANGE = 56;
 const GRAVITY = 900;
+/** Height above the ground at which the player's shadow has shrunk to its smallest. */
+const SHADOW_FADE_HEIGHT = 110;
+const SHADOW_ALPHA = 0.62;
 
 export class WorldScene extends Phaser.Scene {
   private player!: Player;
@@ -28,6 +32,11 @@ export class WorldScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
   private bgLayers: Array<{ sprite: Phaser.GameObjects.TileSprite; factor: number }> = [];
+  private grade: Phaser.FX.ColorMatrix | null = null;
+  private playerShadow!: Phaser.GameObjects.Image;
+  private lastGroundY = 0;
+  private mood!: Mood;
+  private levelWidth = 1;
   private dialogue = new DialogueBox();
   private invitation = new InvitationCard();
   private hud!: Hud;
@@ -45,6 +54,7 @@ export class WorldScene extends Phaser.Scene {
     const level = parseLevel();
     const levelW = level.width * TILE_SIZE;
     const levelH = level.height * TILE_SIZE;
+    this.levelWidth = levelW;
 
     this.physics.world.gravity.y = GRAVITY;
     this.physics.world.setBounds(0, -levelH * 2, levelW, levelH * 3);
@@ -58,7 +68,9 @@ export class WorldScene extends Phaser.Scene {
     });
     const tileset = map.addTilesetImage('tiles', 'tiles', TILE_SIZE, TILE_SIZE, 0, 0)!;
     const layer = map.createLayer(0, tileset, 0, 0)!;
-    layer.setDepth(5);
+    // Depth 0 keeps the ground above the parallax bands (negative depths) while
+    // leaving room beneath every prop for its contact shadow.
+    layer.setDepth(0);
     layer.setCollision(SOLID_TILES);
     // one-way platforms: collide only when landing from above
     layer.forEachTile((tile) => {
@@ -75,11 +87,14 @@ export class WorldScene extends Phaser.Scene {
       level.surfaceY(PLAYER_SPAWN_COL),
     );
     this.player.setDepth(20);
+    this.lastGroundY = this.player.y;
+    this.playerShadow = this.addShadow(this.player.x, this.player.y, 26, 19);
     this.physics.add.collider(this.player, layer);
 
     for (const def of NPCS) {
       const npc = new NPC(this, def, level.surfaceY(def.tx));
       this.npcs.push(npc);
+      this.addShadow(npc.x, npc.y, 24, 9);
       this.physics.add.collider(this.player, npc);
       npc.setInteractive({ useHandCursor: true });
       npc.on('pointerdown', () => this.tryInteract(npc));
@@ -111,6 +126,12 @@ export class WorldScene extends Phaser.Scene {
     this.indicator = this.add.image(0, 0, 'heart').setVisible(false).setDepth(100);
 
     const cam = this.cameras.main;
+    // The global colour grade runs as a camera post-effect rather than a
+    // screen-space quad: a scroll-fixed quad is still scaled by camera zoom, so
+    // it covers only part of the viewport. A colour matrix grades the finished
+    // frame, so it can't fall out of alignment. (WebGL only; on a Canvas
+    // fallback the per-band tints still carry the time of day.)
+    this.grade = cam.postFX?.addColorMatrix() ?? null;
     cam.setBounds(0, -2000, levelW, 2000 + levelH); // generous sky above
     cam.startFollow(this.player, true, 0.15, 0.12);
     const applyZoom = () => {
@@ -169,6 +190,13 @@ export class WorldScene extends Phaser.Scene {
       player: () => ({ x: this.player.x, y: this.player.y }),
       visited: () => this.visitedCount(),
       hearts: () => this.heartCount,
+      mood: () => ({
+        progress: +(this.player.x / this.levelWidth).toFixed(3),
+        sky: this.mood?.sky.toString(16),
+        grade: this.mood?.grade.toString(16),
+        glowAlpha: this.mood?.glowAlpha,
+        lightsOn: this.mood?.lightsOn,
+      }),
       bg: () =>
         this.bgLayers.map((l) => ({
           key: l.sprite.texture.key,
@@ -209,7 +237,8 @@ export class WorldScene extends Phaser.Scene {
     ridgeY?: number;
     frac?: number;
   }> = [
-    { key: 'bg-sky', factor: 0.05, depth: -4, fill: true },
+    { key: 'bg-sky', factor: 0.05, depth: -5, fill: true },
+    { key: 'bg-sky-dusk', factor: 0.05, depth: -4, fill: true },
     { key: 'bg-mountains', factor: 0.15, depth: -3, ridgeY: 72, frac: 0.38 },
     { key: 'bg-hills', factor: 0.28, depth: -2, ridgeY: 62, frac: 0.5 },
     { key: 'bg-hedge', factor: 0.45, depth: -1, ridgeY: 40, frac: 0.61 },
@@ -250,6 +279,41 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
+  // ---------------------------------------------------------------- daylight
+  private updateDaylight(): void {
+    const mood = moodAt(this.player.x / this.levelWidth);
+    this.mood = mood;
+    for (const { sprite } of this.bgLayers) {
+      const key = sprite.getData('def').key as string;
+      sprite.setTint(moodTintFor(mood, key));
+      if (key === 'bg-sky-dusk') sprite.setAlpha(mood.duskBlend);
+    }
+    if (!this.grade) return;
+
+    // 4x5 colour matrix: multiply each channel by the grade colour, then lift
+    // the warm channels by the bloom amount so golden hour actually glows
+    // rather than just going orange.
+    const r = ((mood.grade >> 16) & 0xff) / 255;
+    const g = ((mood.grade >> 8) & 0xff) / 255;
+    const b = (mood.grade & 0xff) / 255;
+    const bloom = mood.glowAlpha;
+    this.grade.set([
+      r, 0, 0, 0, bloom * 0.18,
+      0, g, 0, 0, bloom * 0.09,
+      0, 0, b, 0, bloom * 0.02,
+      0, 0, 0, 1, 0,
+    ]);
+  }
+
+  private updateShadow(): void {
+    if (this.player.onGround) this.lastGroundY = this.player.y;
+    const height = Math.max(0, this.lastGroundY - this.player.y);
+    const k = 1 - Math.min(1, height / SHADOW_FADE_HEIGHT) * 0.6;
+    this.playerShadow.setPosition(this.player.x, this.lastGroundY);
+    this.playerShadow.setDisplaySize(26 * k, 26 * 0.36 * k);
+    this.playerShadow.setAlpha(SHADOW_ALPHA * k);
+  }
+
   // ---------------------------------------------------------------- props
   private static readonly PROP_DEPTH: Record<PropType, number> = {
     pole: 1,
@@ -263,13 +327,33 @@ export class WorldScene extends Phaser.Scene {
     signpost: 6,
   };
 
+  /** Soft contact shadow. Without one, sprites read as stickers on the road. */
+  private addShadow(x: number, y: number, width: number, depth: number): Phaser.GameObjects.Image {
+    const s = this.add.image(x, y, 'shadow').setDepth(depth).setAlpha(SHADOW_ALPHA);
+    s.setDisplaySize(width, width * 0.36);
+    return s;
+  }
+
   private addProp(p: PropDef, surfaceY: number): void {
     const x = p.tx * TILE_SIZE + TILE_SIZE / 2;
-    const img = this.add
-      .image(x, surfaceY, p.type)
-      .setOrigin(0.5, 1)
-      .setDepth(WorldScene.PROP_DEPTH[p.type]);
+    const depth = WorldScene.PROP_DEPTH[p.type];
+    const img = this.add.image(x, surfaceY, p.type).setOrigin(0.5, 1).setDepth(depth);
     if (p.type === 'signpost') this.signpost = img;
+
+    // Narrow-footed props cast a shadow the width of their base, not their art.
+    const footprint: Partial<Record<PropType, number>> = {
+      tree: 30,
+      pole: 26,
+      house: 108,
+      arch: 66,
+      signpost: 22,
+      sign: 26,
+      cart: 64,
+      bush: 46,
+      rock: 34,
+    };
+    const w = footprint[p.type];
+    if (w) this.addShadow(x, surfaceY, w, Math.max(0.5, depth - 0.5));
   }
 
   // ---------------------------------------------------------------- hearts
@@ -375,6 +459,8 @@ export class WorldScene extends Phaser.Scene {
   // ---------------------------------------------------------------- loop
   update(): void {
     this.updateBackground();
+    this.updateDaylight();
+    this.updateShadow();
 
     if (this.uiOpen) {
       this.player.halt();
