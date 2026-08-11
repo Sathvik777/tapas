@@ -31,7 +31,7 @@ export class BootScene extends Phaser.Scene {
       'bg-mountains',
       'bg-hills',
       'bg-hedge',
-      'fg-fence',
+      'fg-grass',
     ]) {
       this.load.image(bg, `assets/${bg}.png`);
     }

@@ -275,8 +275,10 @@ export class WorldScene extends Phaser.Scene {
   //
   // Each band is anchored by its *ridge line* — the y inside the art where its
   // horizon sits — placed at a fraction of the view height, so the horizon
-  // stack holds together at any zoom or aspect ratio. `fg-fence` uses a factor
+  // stack holds together at any zoom or aspect ratio. `fg-grass` uses a factor
   // above 1 so it slides past faster than the world: the foreground depth cue.
+  // It is kept low on purpose (see the generator) — the depth comes from the
+  // speed it passes at, not from height, and anything taller hides the road.
   private static readonly BG_MARGIN = 64;
 
   private static readonly LAYERS: Array<{
@@ -295,7 +297,8 @@ export class WorldScene extends Phaser.Scene {
     { key: 'bg-mountains', factor: 0.15, depth: -3, ridgeY: 72, frac: 0.38 },
     { key: 'bg-hills', factor: 0.28, depth: -2, ridgeY: 62, frac: 0.5 },
     { key: 'bg-hedge', factor: 0.45, depth: -1, ridgeY: 40, frac: 0.61 },
-    { key: 'fg-fence', factor: 1.25, depth: 40, ridgeY: 0, frac: 0.8 },
+    // ridgeY matches FG_RIDGE_Y in scripts/gen_placeholder_assets.py
+    { key: 'fg-grass', factor: 1.25, depth: 40, ridgeY: 28, frac: 0.9 },
   ];
 
   private createBackground(): void {

@@ -19,7 +19,7 @@ python3 scripts/gen_placeholder_assets.py
 | `tiles.png` | 32×32 terrain tiles: ground, dirt, one-way platforms, flowers, tufts, fence |
 | `bg-sky.png` | Sky gradient with clouds, birds and a sun (1536px wide so it doesn't repeat on screen) |
 | `bg-mountains.png` / `bg-hills.png` / `bg-hedge.png` | Parallax bands, hazier and bluer with distance |
-| `fg-fence.png` | Foreground fence + grass bank that scrolls *faster* than the world |
+| `fg-grass.png` | Foreground grass verge that scrolls *faster* than the world |
 | `char-*.png` | 32×40 side-view characters, 5 frames: idle, 3× walk, jump |
 | `tree/house/arch/signpost/cart/sign/rock/bush/pole/heart` | World props |
 

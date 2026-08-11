@@ -83,9 +83,17 @@ horizon sits — placed at a fraction of the view height. That keeps the horizon
 stack coherent at any zoom, aspect ratio or device. Anchoring by the bottom edge
 instead breaks the moment the viewport changes shape.
 
-`fg-fence` uses a scroll factor **above 1** so it slides past faster than the
+`fg-grass` uses a scroll factor **above 1** so it slides past faster than the
 world. That single layer is doing most of the work of making the scene read as
 three-dimensional.
+
+**Keep the foreground low.** This layer used to be a waist-high fence
+(`fg-fence.png`). It looked right in the source art and wrong in the game: at
+the zoom the game actually runs at it took the bottom fifth of the frame and
+walled off the road, the dirt and anything standing near the camera. The verge
+that replaced it is a shallow grass bank with tufts — the depth cue comes from
+the *speed* the layer passes at, not its height. Its ridge row is `FG_RIDGE_Y`
+in the generator and `ridgeY` in `LAYERS`; the two have to agree.
 
 Bands are plain world objects re-anchored to the camera every frame rather than
 `scrollFactor` children, and oversized by `BG_MARGIN` so the one-frame follow lag
@@ -94,7 +102,7 @@ never exposes an edge.
 ### Depth order
 
 Roughly: parallax bands are negative, the **tilemap sits at 0**, props 0.4–7,
-heart pickups 8, villagers 10, player 20, foreground fence 40, emotes 60,
+heart pickups 8, villagers 10, player 20, foreground verge 40, emotes 60,
 particles 90, the couple's marker 100.
 
 The tilemap is at 0 rather than 5 specifically so contact shadows can sit *under*
@@ -107,7 +115,7 @@ Integer zoom only — fractional zoom makes pixel art shimmer and can bleed
 neighbouring tiles. The zoom that gets picked shows roughly 260px of world
 height, with a floor so the view never gets narrower than 300px (which is what a
 phone held upright would otherwise do). The player sits ~70% down the frame:
-sky and hills above, road and fence below.
+sky and hills above, road and grass verge below.
 
 The level is 24 rows deep although the ground only uses rows 9–13. The extra
 depth exists so a tall viewport can never scroll past the bottom of the world
@@ -237,9 +245,10 @@ Things that look like bugs but aren't, and fixes that will reintroduce real ones
 
 ## Still open
 
-- **Foreground variety.** One fence texture runs the entire level. Swapping it
-  by zone — fence, stone wall, tall grass — plus the occasional foreground tree
-  trunk sweeping past, would multiply the sense of travel for very little work.
+- **Foreground variety.** One grass verge runs the entire level. Swapping it by
+  zone — meadow grass, a low stone edge, reeds — plus the occasional foreground
+  tree trunk sweeping past, would multiply the sense of travel for very little
+  work. Whatever replaces it stays low; see the note in Parallax.
 - **The two leads.** The player is still a generic figure. Needs real outfits
   and colouring, which unlocks the groom/bride character select the `Player`
   class already takes a sprite key for.

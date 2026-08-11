@@ -166,7 +166,7 @@ export function moodTintFor(mood: Mood, key: string): number {
       return mood.hills;
     case 'bg-hedge':
       return mood.hedge;
-    case 'fg-fence':
+    case 'fg-grass':
       return mood.foreground;
     default:
       return 0xffffff;

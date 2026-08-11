@@ -97,7 +97,7 @@ src/ui/                 dialogue box, HUD, invitation card, touch controls (DOM-
 `WorldScene.LAYERS` defines the parallax stack. Each distant band is anchored by
 its *ridge line* — the y inside the artwork where its horizon sits — placed at a
 fraction of the view height, so the horizon holds together at any zoom or aspect
-ratio. `fg-fence` uses a scroll factor above 1, which is what makes it read as
+ratio. `fg-grass` uses a scroll factor above 1, which is what makes it read as
 being in front of the player. The camera picks an integer zoom that shows about
 260px of world vertically and frames the player ~70% down the screen.
 
@@ -109,7 +109,7 @@ being in front of the player. The camera picks an integer zoom that shows about
 - [x] **Detail pass 2** — the cast recast as family, each with a prop that says who they are, blinking, landing squash and over-head emotes
 - [x] **Detail pass 3** — a world that moves: drifting clouds, swaying grass, bird flocks, butterflies over the flower patches, and petals thickening as the wedding nears
 - [x] **Detail pass 4a** — landmarks in both vocabularies: falu-red cottage, birch, midsummer pole and dala horse alongside a mandap, marigold garlands, banana plants, kolam and brass lamps that light up at dusk
-- [ ] Detail pass 4b — foreground variety (stone wall and tall-grass stretches instead of one fence)
+- [ ] Detail pass 4b — foreground variety (stone-edge and reed stretches instead of one grass verge)
 - [x] **The finale** — the couple stand under the mandap instead of a signpost, hearts became currency at a gift stall, and reaching the end sets off fireworks
 - [ ] Detail pass 5 — the two of you as the playable leads, plus a companion
 - [ ] Puzzles / quiz about us → earn points (NPC "visited" and heart tracking already in place)

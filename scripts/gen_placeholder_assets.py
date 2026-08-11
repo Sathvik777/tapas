@@ -3,7 +3,7 @@
 
 Art direction: cozy countryside side-scroller — layered parallax with
 atmospheric perspective (far hazy mountains -> green hills -> hedgerow),
-a foreground fence/grass bank that passes in front of the player, and
+a foreground grass verge that passes in front of the player, and
 chunky dark outlines on characters and props.
 
 Run:  python3 scripts/gen_placeholder_assets.py
@@ -34,6 +34,10 @@ STONE = "#9a9186"
 WOOD = "#a9784e"
 WOOD_DARK = "#7d5333"
 WOOD_EDGE = "#4a3323"
+
+# Row inside fg-grass.png where the grass line sits. WorldScene anchors the
+# layer by this row (`ridgeY` in its LAYERS table) — keep the two in step.
+FG_RIDGE_Y = 28
 
 
 def lerp(a, b, t):
@@ -378,26 +382,22 @@ def make_hedge() -> None:
 
 
 def make_foreground() -> None:
-    """Fence + grass bank drawn IN FRONT of the player (the Milki-style depth cue)."""
+    """Grass verge drawn IN FRONT of the player (the Milki-style depth cue).
+
+    This used to be a waist-high fence. At the zoom the game actually runs at,
+    a fence tall enough to read as pickets ate the bottom fifth of the frame and
+    hid the road, so the verge is deliberately shallow: enough grass to sell the
+    parallax, low enough to see over. Keep it that way — the layer earns its
+    place by *moving*, not by being tall.
+    """
+    # Only the top ~40px is ever on screen; the rest is solid green skirt so a
+    # tall viewport (a phone held upright, where the camera falls back to zoom 1)
+    # can't out-run the bottom of the texture and show a gap.
     w, h = 512, 240
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
 
-    # low fence first, grass bank drawn over its feet
-    for i, px_ in enumerate(range(10, w, 64)):
-        top = 8 + (i % 3)
-        d.rectangle([px_ - 1, top - 2, px_ + 8, 76], fill=WOOD_EDGE)
-        d.rectangle([px_, top, px_ + 7, 74], fill=WOOD)
-        d.rectangle([px_, top, px_ + 2, 74], fill="#c08d5f")
-        d.rectangle([px_ + 5, top, px_ + 7, 74], fill=WOOD_DARK)
-    for ry in (20, 44):
-        d.rectangle([0, ry - 2, w, ry + 7], fill=WOOD_EDGE)
-        d.rectangle([0, ry, w, ry + 5], fill=WOOD)
-        d.rectangle([0, ry, w, ry + 1], fill="#c08d5f")
-        d.rectangle([0, ry + 4, w, ry + 5], fill=WOOD_DARK)
-
-    # grass bank in front of the fence feet
-    ys = ridge_ys(w, 62, [(5, 256, 0.6), (3, 128, 2.2), (2, 64, 1.1)])
+    ys = ridge_ys(w, FG_RIDGE_Y, [(5, 256, 0.6), (3, 128, 2.2), (2, 64, 1.1)])
     fill_below(d, ys, h, "#3f7035")
     top_band(d, ys, "#548f44", 9)
     for x, y in enumerate(ys):
@@ -417,7 +417,7 @@ def make_foreground() -> None:
         d.line([x, y + 12, x, y + 2], fill="#356028")
         d.ellipse([x - 3, y - 2, x + 3, y + 4], fill=c)
 
-    img.save(OUT / "fg-fence.png")
+    img.save(OUT / "fg-grass.png")
 
 
 # ---------------------------------------------------------------- props
