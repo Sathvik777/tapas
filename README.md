@@ -1,250 +1,118 @@
-# TAble PArSing (TAPAS)
+# Wedding Quest 💍
 
-Code and checkpoints for training the transformer-based Table QA models introduced
-in the paper [TAPAS: Weakly Supervised Table Parsing via Pre-training](#how-to-cite-tapas).
+A cozy side-scrolling adventure that doubles as our wedding invitation —
+inspired by [Milki Delivery](https://dodoot.itch.io/milki-delivery-demo). Walk
+and hop your way right through the countryside, meet the neighbors, and collect
+every detail of the big day, spend the hearts you find on a gift at the stall,
+and reach the two of us waiting under the mandap — where the full invitation
+finally appears, with fireworks.
 
-## News
+Built with [Phaser 3](https://phaser.io) + [Vite](https://vite.dev) + TypeScript.
+Plays in any browser, desktop or phone (on-screen controls appear on touch devices).
 
-2020/06/10
- - Bump TensorFlow to v2.2
+📐 **[docs/DESIGN.md](docs/DESIGN.md)** — why it's built this way: the art
+direction, how the two families' worlds are blended, the systems and the traps.
+**[CLAUDE.md](CLAUDE.md)** is the short version for anyone (or any agent)
+picking the code up cold.
 
-2020/06/08
- - Released the [pre-training data](https://github.com/google-research/tapas/blob/master/PRETRAIN_DATA.md).
+## Play / develop
 
-2020/05/07
- - Added a [colab](http://tiny.cc/tapas-colab) to try predictions on SQA
-
-## Installation
-
-The easiest way to try out TAPAS with free GPU/TPU is in our
-[Colab](http://tiny.cc/tapas-colab), which shows how to do predictions on [SQA](http://aka.ms/sqa).
-
-The repository uses protocol buffers, and requires the `protoc` compiler to run.
-You can download the latest binary for your OS [here](https://github.com/protocolbuffers/protobuf/releases).
-On Ubuntu/Debian, it can be installed with:
+Node 22 (pinned in `.nvmrc`).
 
 ```bash
-sudo apt-get install protobuf-compiler
+npm install
+npm run dev       # local dev server (add --host to test from your phone)
+npm run build     # type-check + production build into dist/
+npm run preview   # serve the production build
 ```
 
-Afterwards, clone and install the git repository:
+**Controls** — walk with ← →  / A D, jump with Space / ↑ / W, talk with E or Enter.
+On a phone: ◀ ▶ to walk, ⤒ to jump, and a ❤ button appears whenever someone is
+close enough to talk to. Landscape looks best; the game says so on startup.
+
+## Editing the wedding details
+
+Everything guests read lives in **`src/content/wedding.ts`** — names, date,
+venue, dress code, RSVP, and every NPC's dialogue, plus which column of the
+level each character stands in. Replace the `[bracketed]` placeholders with
+your real details.
+
+> ⚠️ This repo is public: only commit details you're happy for anyone to see.
+
+## Continuous deployment (Vercel)
+
+Vercel is connected, and **every push to this branch redeploys the same preview URL**:
+
+**https://tapas-git-claude-wedding-game-poc-n3638n-sathvik777s-projects.vercel.app**
+
+Keep that link on your phone — it always serves the latest commit on
+`claude/wedding-game-poc-n3638n`, so you can re-test after each change without
+hunting for a new URL. Vercel also comments a link on every pull request.
+
+### If the preview asks you to log in
+
+New Vercel projects protect preview deployments by default, which means anyone
+who is not signed into your Vercel account hits a login wall — including you on a
+phone, and including any guest you send the game to. Turn it off at
+**Vercel → the `tapas` project → Settings → Deployment Protection → Vercel
+Authentication → Disabled**. The preview becomes publicly reachable by URL, which
+is what you want for an invitation (and the repo is public already).
+
+### Why the production URL is empty
+
+Vercel builds production from the repository's default branch, and `master` is
+still the old TAPAS Python fork — there is no `package.json` there, so there is
+nothing for it to build. Merging this branch into `master` makes the production
+URL serve the game. Until then, use the preview URL above.
+
+## Checking a change
+
+`scripts/playthrough.mjs` walks the whole level, talks to every villager, and
+asserts the things that must not break — everyone reachable, the HUD counting
+them all, the walk ending at golden hour, the invitation card opening, and a
+clean console.
 
 ```bash
-git clone https://github.com/google-research/tapas
-cd tapas
-pip install -e .
+npm run build && npm run preview   # one terminal
+npm i -D playwright                # once; deliberately not a project dependency
+node scripts/playthrough.mjs       # another terminal
 ```
 
-To run the test suite we use the [tox](https://tox.readthedocs.io/en/latest/) library which can be run by calling:
-```bash
-pip install tox
-tox
-```
-
-## Data
-
-See the section below for the pre-training data.
-
-The pre-trained TAPAS checkpoints can be downloaded here:
-
-* [MASKLM base](https://storage.googleapis.com/tapas_models/2020_04_21/tapas_base.zip)
-* [MASKLM large](https://storage.googleapis.com/tapas_models/2020_04_21/tapas_large.zip)
-* [SQA base](https://storage.googleapis.com/tapas_models/2020_04_21/tapas_sqa_base.zip)
-* [SQA large](https://storage.googleapis.com/tapas_models/2020_04_21/tapas_sqa_large.zip)
-
-The first two models are pre-trained on the Mask-LM task and the last two
-on the Mask-LM task first and SQA second.
-
-You also need to download the task data for the fine-tuning tasks:
-
-* [SQA](http://aka.ms/sqa)
-* [WikiSQL](https://github.com/salesforce/WikiSQL)
-* [WTQ 1.0](https://github.com/ppasupat/WikiTableQuestions)
-
-
-## Pre-Training
-
-Note that you can skip pre-training and just use one of the pre-trained checkpoints provided above.
-
-Information about the pre-taining data can be found [here](https://github.com/google-research/tapas/blob/master/PRETRAIN_DATA.md).
-
-The TF examples for pre-training can be created using [Google Dataflow](https://cloud.google.com/dataflow):
-
-```bash
-python3 setup.py sdist
-python3 tapas/create_pretrain_examples_main.py \
-  --input_file="gs://tapas_models/2020_05_11/interactions.txtpb.gz" \
-  --vocab_file="gs://tapas_models/2020_05_11/vocab.txt" \
-  --output_dir="gs://your_bucket/output" \
-  --runner_type="DATAFLOW" \
-  --gc_project="you-project" \
-  --gc_region="us-west1" \
-  --gc_job_name="create-pretrain" \
-  --gc_staging_location="gs://your_bucket/staging" \
-  --gc_temp_location="gs://your_bucket/tmp" \
-  --extra_packages=dist/tapas-0.0.1.dev0.tar.gz
-```
-
-You can also run the pipeline locally but that will take a long time:
-
-```bash
-python3 tapas/create_pretrain_examples_main.py \
-  --input_file="$data/interactions.txtpb.gz" \
-  --output_dir="$data/" \
-  --vocab_file="$data/vocab.txt" \
-  --runner_type="DIRECT"
-```
-
-This will create two tfrecord files for training and testing.
-The pre-training can then be started with the command below.
-The init checkpoint should be a standard BERT checkpoint.
-
-```bash
-python3 tapas/experiments/tapas_pretraining_experiment.py \
-  --eval_batch_size=32 \
-  --train_batch_size=512 \
-  --tpu_iterations_per_loop=5000 \
-  --num_eval_steps=100 \
-  --save_checkpoints_steps=600 \
-  --num_train_examples=512000000 \
-  --max_seq_length=128 \
-  --input_file_train="${data}/train.tfrecord" \
-  --input_file_eval="${data}/test.tfrecord" \
-  --init_checkpoint="${tapas_data_dir}/model.ckpt" \
-  --bert_config_file="${tapas_data_dir}/bert_config.json" \
-  --model_dir="..." \
-  --do_train
-```
-
-You can start a separate eval job by setting `--nodo_train --doeval`.
-
-## Running a fine-tuning task
-
-We need to create the TF examples before starting the training.
-For example, for SQA that would look like:
-
-```bash
-python3 tapas/run_task_main.py \
-  --task="SQA" \
-  --input_dir="${sqa_data_dir}" \
-  --output_dir="${output_dir}" \
-  --bert_vocab_file="${tapas_data_dir}/vocab.txt" \
-  --mode="create_data"
-```
-
-Afterwards, training can be started by running:
-
-```bash
-python3 tapas/run_task_main.py \
-  --task="SQA" \
-  --output_dir="${output_dir}" \
-  --init_checkpoint="${tapas_data_dir}/model.ckpt" \
-  --bert_config_file="${tapas_data_dir}/bert_config.json" \
-  --mode="train" \
-  --use_tpu
-```
-
-This will use the preset hyper-parameters set in `hparam_utils.py`.
-
-It's recommended to start a separate eval job to continuously produce predictions
-for the checkpoints created by the training job. Alternatively, you can run
-the eval job after training to only get the final results.
-
-```bash
-python3 tapas/run_task_main.py \
-  --task="SQA" \
-  --output_dir="${output_dir}" \
-  --init_checkpoint="${tapas_data_dir}/model.ckpt" \
-  --bert_config_file="${tapas_data_dir}/bert_config.json" \
-  --mode="predict_and_evaluate"
-```
-
-Another tool to run experiments is ```tapas_classifier_experiment.py```. It's more
-flexible than ```run_task_main.py``` but also requires setting all the hyper-parameters
-(via the respective command line flags).
-
-
-## Evaluation
-
-Here we explain some details about different tasks and give some rough numbers.
-These numbers are ```denotation accuracy``` as computed by our tool and not
-the official metrics of the respective tasks. The numbers are here to
-to verify whether one's own runs are in the right ballpark. These numbers are
-not medians but individual runs.
-
-### SQA
-
-By default, SQA will evaluate using the reference answers of the previous
-questions. The number in [the paper](#how-to-cite-tapas) (Table 5) are computed
-using the more realistic setup
-where the previous answer are model predictions. `run_task_main.py` will output
-additional prediction files for this setup as well if run on GPU.
-
-Model | Dev Denotation | Dev Seq Denotation
------ | -------------- | ------------------
-Large |        0.68298 | 0.65038
-Base  |        0.63854 | 0.57837
-
-
-### WTQ
-
-For the official evaluation results one should convert the TAPAS predictions to
-the WTQ format and run the official evaluation script. This can be done using
-`convert_predictions.py`.
-
-Model     |  Dev Denotation
---------- | ---------------
-SQA Large | 0.49288
-Large     | 0.41637
-SQA Base  | 0.41210
-Base      | 0.26085
-
-
-### WikiSQL
-
-As discussed in [the paper](#how-to-cite-tapas) our code will compute evaluation
-metrics that deviate from the official evaluation script (Table 3 and 10).
-
-Model     |  Dev Denotation
---------- | ---------------
-LARGE     | 0.85239
-BASE      | 0.81166
-
-
-## Hardware Requirements
-
-TAPAS is essentialy a BERT model and thus has the same [requirements](https://github.com/google-research/bert/blob/master/README.md#out-of-memory-issues).
-This means that training the large model with 512 sequence length will
-require a TPU.
-You can use the option `max_seq_length` to create shorter sequences. This will
-reduce accuracy but also make the model trainable on GPUs.
-Another option is to reduce the batch size (`train_batch_size`),
-but this will likely also affect accuracy.
-We added an options `gradient_accumulation_steps` that allows you to split the
-gradient over multiple batches.
-Evaluation with the default test batch size (32) should be possible on GPU.
-
-## <a name="how-to-cite-tapas"></a>How to cite TAPAS?
-
-You can cite the [paper to appear at ACL](https://arxiv.org/abs/2004.02349):
+## Project layout
 
 ```
-@inproceedings{49053,
-title = {Tapas: Weakly Supervised Table Parsing via Pre-training},
-author = {Jonathan Herzig and Paweł Krzysztof Nowak and Thomas Müller and Francesco Piccinno and Julian Martin Eisenschlos},
-year = {2020},
-URL = {https://arxiv.org/abs/2004.02349},
-note = {to appear},
-booktitle = {Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
-address = {Seattle, Washington, United States}
-}
+docs/DESIGN.md          ✏️  design decisions, house rules and known traps
+public/assets/          generated sprites + parallax art (see CREDITS.md)
+scripts/                asset generator (python3 scripts/gen_placeholder_assets.py)
+src/content/wedding.ts  ✏️  all wedding text, family names, dialogue and placement
+src/world/level.ts      the level: ground profile, platforms, hearts, props
+src/world/daylight.ts   keyframed time-of-day moods driven by level progress
+src/scenes/             boot / title / world scenes
+src/objects/            Player (takes a sprite key, ready for character select), NPC
+src/ui/                 dialogue box, HUD, invitation card, touch controls (DOM-based)
 ```
 
+### How the scene is put together
 
-## Disclaimer
+`WorldScene.LAYERS` defines the parallax stack. Each distant band is anchored by
+its *ridge line* — the y inside the artwork where its horizon sits — placed at a
+fraction of the view height, so the horizon holds together at any zoom or aspect
+ratio. `fg-fence` uses a scroll factor above 1, which is what makes it read as
+being in front of the player. The camera picks an integer zoom that shows about
+260px of world vertically and frames the player ~70% down the screen.
 
-This is not an official Google product.
+## Roadmap
 
-## Contact information
-
-For help or issues, please submit a GitHub issue.
+- [x] **POC** — walk and jump through the countryside, NPCs share the wedding info, final invitation card
+- [x] Side-view platformer look with layered parallax and higher-resolution art
+- [x] **Detail pass 1** — the walk has a time of day (morning → golden hour) and everything casts a shadow
+- [x] **Detail pass 2** — the cast recast as family, each with a prop that says who they are, blinking, landing squash and over-head emotes
+- [x] **Detail pass 3** — a world that moves: drifting clouds, swaying grass, bird flocks, butterflies over the flower patches, and petals thickening as the wedding nears
+- [x] **Detail pass 4a** — landmarks in both vocabularies: falu-red cottage, birch, midsummer pole and dala horse alongside a mandap, marigold garlands, banana plants, kolam and brass lamps that light up at dusk
+- [ ] Detail pass 4b — foreground variety (stone wall and tall-grass stretches instead of one fence)
+- [x] **The finale** — the couple stand under the mandap instead of a signpost, hearts became currency at a gift stall, and reaching the end sets off fireworks
+- [ ] Detail pass 5 — the two of you as the playable leads, plus a companion
+- [ ] Puzzles / quiz about us → earn points (NPC "visited" and heart tracking already in place)
+- [ ] Open leaderboard (needs a small backend — e.g. Supabase or Vercel KV)
+- [ ] Choose your character: groom or bride (`Player` already takes a sprite key)
+- [ ] Swap the generated art for a commissioned pack (see `public/assets/CREDITS.md`)
