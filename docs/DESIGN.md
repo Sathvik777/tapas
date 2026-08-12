@@ -240,6 +240,10 @@ Things that look like bugs but aren't, and fixes that will reintroduce real ones
 - **Preview deployments may sit behind a Vercel login.** That is deployment
   protection, not a broken build — Settings → Deployment Protection → Vercel
   Authentication.
+- **The bride and the florist are drawn to look like the real people.** Their
+  colouring and `curly=True` in `make_character` are deliberate, not the
+  generator's defaults left unfinished. Don't normalise them back toward the
+  rest of the cast.
 - **Anything that hangs or lies flat has to be tied to something.** A garland
   floats unless both of its ends land on a bunting pole's crossbar or the
   cottage roof — the art spans four columns, so its two anchors have to be four

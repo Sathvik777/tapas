@@ -1002,7 +1002,8 @@ ACCESSORIES = {
 }
 
 
-def draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress, accessory):
+def draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress, accessory,
+                   curly=False):
     """A chibi character facing RIGHT, art centred in a 40x40 frame."""
     d = ImageDraw.Draw(frame)
     ox = BODY_X
@@ -1056,14 +1057,40 @@ def draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress, a
         d.rectangle([ox + 19, by + 8, ox + 21, by + 10], fill=skin)
 
     hy = 3 + bob
-    d.rounded_rectangle([ox + 8, hy, ox + 25, hy + 16], radius=5, fill=skin)
-    d.rounded_rectangle([ox + 7, hy - 1, ox + 25, hy + 7], radius=4, fill=hair)
-    d.rectangle([ox + 7, hy + 4, ox + 12, hy + 12], fill=hair)
-    d.polygon([(ox + 18, hy + 3), (ox + 25, hy + 3), (ox + 25, hy + 6), (ox + 20, hy + 5)], fill=hair)
-    d.line([ox + 8, hy + 1, ox + 24, hy + 1], fill=shade(hair, 1.35))
-    if long_hair:
-        d.rectangle([ox + 6, hy + 4, ox + 10, hy + 25], fill=hair)
-        d.rectangle([ox + 6, hy + 22, ox + 10, hy + 25], fill=shade(hair, 0.8))
+
+    def puff(cx_, cy_, r, color):
+        d.ellipse([ox + cx_ - r, cy_ - r, ox + cx_ + r, cy_ + r], fill=color)
+
+    if curly:
+        # Hair as a soft round mass first, with the face set into the front of
+        # it. The straight side panel the other characters use reads as
+        # dead-straight hair, which is not the silhouette we want here.
+        #
+        # Nothing may reach above hy-1: the frame is 40px, the art already fills
+        # it, and the jump pose lifts everything 2px. Volume goes backwards and
+        # down, where there is room, not up — a crown that pokes out of the
+        # frame comes back as a flat cut across the top of her head.
+        for cx_, cy_, r in ((13, hy + 7, 8), (6, hy + 8, 6), (18, hy + 7, 7)):
+            puff(cx_, cy_, r, hair)
+        if long_hair:
+            for cx_, cy_, r in ((5, hy + 15, 6), (6, hy + 21, 5)):
+                puff(cx_, cy_, r, hair)
+        d.rounded_rectangle([ox + 10, hy + 1, ox + 25, hy + 16], radius=5, fill=skin)
+        # a few curls breaking the line of the forehead and the crown
+        for cx_, cy_, r in ((11, hy + 3, 4), (16, hy + 3, 4), (21, hy + 2, 3), (24, hy + 3, 2)):
+            puff(cx_, cy_, r, hair)
+        for cx_, cy_, r in ((10, hy + 1, 2), (17, hy + 1, 2), (5, hy + 4, 2)):
+            puff(cx_, cy_, r, shade(hair, 1.3))
+    else:
+        d.rounded_rectangle([ox + 8, hy, ox + 25, hy + 16], radius=5, fill=skin)
+        d.rounded_rectangle([ox + 7, hy - 1, ox + 25, hy + 7], radius=4, fill=hair)
+        d.rectangle([ox + 7, hy + 4, ox + 12, hy + 12], fill=hair)
+        d.polygon([(ox + 18, hy + 3), (ox + 25, hy + 3), (ox + 25, hy + 6), (ox + 20, hy + 5)],
+                  fill=hair)
+        d.line([ox + 8, hy + 1, ox + 24, hy + 1], fill=shade(hair, 1.35))
+        if long_hair:
+            d.rectangle([ox + 6, hy + 4, ox + 10, hy + 25], fill=hair)
+            d.rectangle([ox + 6, hy + 22, ox + 10, hy + 25], fill=shade(hair, 0.8))
     d.ellipse([ox + 11, hy + 8, ox + 15, hy + 12], fill=skin)
     d.point((ox + 13, hy + 10), fill=shade(skin, 0.8))
     if pose == "blink":
@@ -1079,11 +1106,13 @@ def draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress, a
         ACCESSORIES[accessory](d, ox, by, hy)
 
 
-def make_character(name, skin, hair, outfit, outfit2, long_hair=False, dress=False, accessory=None):
+def make_character(name, skin, hair, outfit, outfit2, long_hair=False, dress=False, accessory=None,
+                   curly=False):
     sheet = Image.new("RGBA", (FRAME_W * len(POSES), FRAME_H), (0, 0, 0, 0))
     for i, pose in enumerate(POSES):
         frame = Image.new("RGBA", (FRAME_W, FRAME_H), (0, 0, 0, 0))
-        draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress, accessory)
+        draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress, accessory,
+                       curly=curly)
         outline_sprite(frame)
         sheet.paste(frame, (i * FRAME_W, 0))
     sheet.save(OUT / f"char-{name}.png")
@@ -1152,15 +1181,17 @@ def main() -> None:
     make_dust()
 
     make_character("groom", "#c98d5e", "#221a18", "#3d5a80", "#2b4462")
-    make_character("bride", "#f0d0b4", "#d9b168", "#f7f3ea", "#d8c9b8", long_hair=True, dress=True)
+    make_character("bride", "#7d5033", "#2a2018", "#f7f3ea", "#d8c9b8",
+                   long_hair=True, dress=True, curly=True)
     # the two grandmothers, one from each side
     make_character("npc-mormor", "#f0d5bd", "#e2e0dc", "#6f8ba8", "#5a7189",
                    long_hair=True, dress=True, accessory="cane")
     make_character("npc-ammamma", "#b87b4c", "#e8e4e0", "#c9455c", "#a3384b",
                    long_hair=True, dress=True, accessory="saree")
     make_character("npc-baker", "#e8bd95", "#a85a2a", "#e0576f", "#b84457", accessory="tray")
-    make_character("npc-florist", "#c98d5e", "#2a2320", "#7fb069", "#628a50",
-                   long_hair=True, dress=True, accessory="basket")
+    # the bride's sister — same colouring, a shorter crop so the two read apart
+    make_character("npc-florist", "#7d5033", "#2a2018", "#7fb069", "#628a50",
+                   dress=True, accessory="basket", curly=True)
     make_character("npc-musician", "#b87b4c", "#2a2320", "#f5a623", "#d98e1b", accessory="nadaswaram")
     make_character("npc-kid", "#d9a878", "#2a2320", "#f5d76b", "#d4b73f", accessory="pillow")
 
