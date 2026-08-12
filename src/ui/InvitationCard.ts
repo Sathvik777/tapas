@@ -16,7 +16,14 @@ export class InvitationCard {
 
     el('div', '', card).textContent = '💍';
     const [names, sub, ...rest] = lines;
-    el('h1', '', card).textContent = names;
+    // Full names are long enough to wrap. Let the heading break between the two
+    // names, never inside one — "Samina / Dahlberg" is not a thing you print on
+    // an invitation. Each name is one unbreakable run; the ♥ is the hinge.
+    const h1 = el('h1', '', card);
+    names.split(' ♥ ').forEach((name, i) => {
+      if (i) h1.append(' ♥ ');
+      el('span', 'wq-name', h1).textContent = name;
+    });
     el('div', 'wq-sub', card).textContent = sub;
     for (const line of rest) {
       const p = el('p', '', card);

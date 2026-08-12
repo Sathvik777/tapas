@@ -86,6 +86,7 @@ export function injectStylesOnce(): void {
     padding: 28px 26px; text-align: center; font: 16px/1.55 Georgia, serif;
   }
   .wq-card h1 { font-size: 27px; margin: 4px 0 2px; color: #c9455c; font-weight: normal; }
+  .wq-card h1 .wq-name { white-space: nowrap; }
   .wq-card .wq-sub { font-style: italic; color: #8a7a6a; margin-bottom: 14px; }
   .wq-card p { margin: 5px 0; }
   .wq-shop { text-align: left; }

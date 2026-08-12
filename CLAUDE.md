@@ -35,8 +35,9 @@ Node 22, pinned in `.nvmrc`.
 - **Never hand-edit `public/assets/*.png`.** They are generated; the next run of
   the generator overwrites them. Change the generator instead.
 - **Guest-facing copy only in `src/content/wedding.ts`.** No strings in scenes.
-- **The repo is public.** Real names, dates and venue are `[bracketed]`
-  placeholders until the owner decides to publish them.
+- **The repo is public.** The couple's own names are published by their choice.
+  Everything else — family names, date, venue, RSVP details — stays a
+  `[bracketed]` placeholder until the owner fills it in. Don't invent any of it.
 - **Both families, everywhere.** Swedish and South Indian vocabularies share the
   whole level; neither gets a stretch to itself. See `docs/DESIGN.md`.
 - Develop on `claude/wedding-game-poc-n3638n`; pushes redeploy the preview URL

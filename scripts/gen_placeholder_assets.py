@@ -805,21 +805,29 @@ def in_banana():
 
 
 def in_kolam():
-    """Rice-flour kolam laid on the road at the threshold."""
-    im = Image.new("RGBA", (104, 36), (0, 0, 0, 0))
+    """Rice-flour kolam laid on the road at the threshold.
+
+    Flat on purpose. Only a shallow strip of road shows between the character's
+    feet and the foreground verge — and how shallow depends on where the camera
+    deadzone happens to have left the player — so a kolam drawn at a comfortable
+    3/4 angle spends half its life hidden behind the grass. Squashed to 22px it
+    always lands in the strip, and a circle chalked on the ground really is that
+    flat from this angle.
+    """
+    im = Image.new("RGBA", (104, 22), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    cx, cy = 52, 20
+    cx, cy = 52, 11
     for r, c in ((44, "#f7f3ea"), (32, "#f5a623"), (20, "#f7f3ea")):
-        d.ellipse([cx - r, cy - r // 2, cx + r, cy + r // 2], outline=c, width=2)
+        d.ellipse([cx - r, cy - r // 4, cx + r, cy + r // 4], outline=c, width=2)
     for i in range(16):
         a = math.radians(i * 22.5)
-        x, y = cx + math.cos(a) * 38, cy + math.sin(a) * 17
+        x, y = cx + math.cos(a) * 38, cy + math.sin(a) * 9
         d.ellipse([x - 2, y - 1, x + 2, y + 1], fill="#f7f3ea")
     for i in range(8):
         a = math.radians(i * 45)
-        x, y = cx + math.cos(a) * 20, cy + math.sin(a) * 9
-        d.ellipse([x - 4, y - 2, x + 4, y + 2], fill="#e0576f")
-    d.ellipse([cx - 6, cy - 3, cx + 6, cy + 3], fill="#f5a623")
+        x, y = cx + math.cos(a) * 20, cy + math.sin(a) * 5
+        d.ellipse([x - 4, y - 1, x + 4, y + 1], fill="#e0576f")
+    d.ellipse([cx - 6, cy - 2, cx + 6, cy + 2], fill="#f5a623")
     d.ellipse([cx - 2, cy - 1, cx + 2, cy + 1], fill="#f7f3ea")
     return im
 

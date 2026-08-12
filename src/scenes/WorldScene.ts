@@ -513,8 +513,18 @@ export class WorldScene extends Phaser.Scene {
 
   /** Props that don't simply stand on the ground: [originY, y offset]. */
   private static readonly PROP_ANCHOR: Partial<Record<PropType, [number, number]>> = {
-    kolam: [0, 3], // lies flat on the road just below the grass line
-    garland: [0, -134], // strung overhead between the poles
+    // Centred on the ground line, so it lies at the feet of whoever is standing
+    // on it. It used to hang below the line, out on the dirt: the camera
+    // deadzone lets the ground line sit as low as 81% of the frame, and the
+    // foreground verge starts at 90%, so there are camera positions where
+    // nothing below the line is visible at all and the kolam simply vanished.
+    kolam: [0.5, 2],
+    // A garland is *tied* to things: -84 puts its two ends on a bunting pole's
+    // crossbar (the pole is 92 tall, its crossbar 8px down from the top) and on
+    // the cottage's roof slope. It used to hang at -134, which cleared both and
+    // left it floating in the sky. If you move a garland, move it to a column
+    // where both ends land on something — see the pairs in level.ts.
+    garland: [0, -84],
     toran: [0, -74], // strung along the cottage eaves, above the door
   };
 

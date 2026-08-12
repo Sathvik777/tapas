@@ -240,6 +240,18 @@ Things that look like bugs but aren't, and fixes that will reintroduce real ones
 - **Preview deployments may sit behind a Vercel login.** That is deployment
   protection, not a broken build — Settings → Deployment Protection → Vercel
   Authentication.
+- **Anything that hangs or lies flat has to be tied to something.** A garland
+  floats unless both of its ends land on a bunting pole's crossbar or the
+  cottage roof — the art spans four columns, so its two anchors have to be four
+  columns apart and the same height. A kolam belongs at a building's threshold,
+  sharing that building's column. Both rules are written out over `PROPS` in
+  `level.ts`; the offsets they depend on are in `WorldScene.PROP_ANCHOR`.
+- **Nothing important goes below the ground line.** The camera deadzone lets the
+  ground line sit anywhere from 59% to 81% down the frame while the foreground
+  verge starts at 90%, so at the bottom of that range there is no visible road
+  at all. The kolam used to lie out on the dirt and vanished for whole stretches
+  of the walk; it is centred on the ground line now, at the feet of whoever is
+  standing on it.
 
 ---
 

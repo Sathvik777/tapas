@@ -4,9 +4,16 @@
  * (Remember: this repo is public — only commit details you're happy to share.)
  */
 
+/**
+ * `partner1` / `partner2` are the everyday names — villagers use them in
+ * conversation, so they should read the way a grandmother would say them.
+ * The `*Full` forms are for the invitation card, where the full name belongs.
+ */
 export const COUPLE = {
-  partner1: '[Groom]',
-  partner2: '[Bride]',
+  partner1: 'Sathvik',
+  partner2: 'Samina',
+  partner1Full: 'Sathvik Katam',
+  partner2Full: 'Samina Dahlberg',
   hashtag: '#[YourWeddingHashtag]',
 };
 
@@ -175,7 +182,7 @@ export const SHOP = {
 };
 
 export const INVITATION_LINES = [
-  `${COUPLE.partner1} ♥ ${COUPLE.partner2}`,
+  `${COUPLE.partner1Full} ♥ ${COUPLE.partner2Full}`,
   'joyfully invite you to their wedding',
   '',
   `📅  ${WEDDING.date}`,
