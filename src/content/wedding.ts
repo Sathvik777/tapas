@@ -17,6 +17,20 @@ export const COUPLE = {
   hashtag: '#[YourWeddingHashtag]',
 };
 
+/**
+ * The haldi, two days before, at his parents' house. It has its own map link
+ * because the address is a landmark rather than a street — "near the government
+ * hospital" is how you say where a village house is, and it is not something a
+ * guest can type into a phone.
+ */
+export const HALDI = {
+  date: 'Monday, October 12, 2026',
+  time: '[Time]',
+  venue: `${COUPLE.partner1}'s family home`,
+  address: 'Near Cherial Government Hospital, Close to BD Colony, Cherial',
+  mapsUrl: 'https://maps.app.goo.gl/SRhkB7F6FoQvq9vu7',
+};
+
 export const WEDDING = {
   date: 'Wednesday, October 14, 2026',
   time: '8:30 AM onwards',
@@ -34,6 +48,16 @@ export const WEDDING = {
   rsvpHow: '[RSVP link or phone number]',
 };
 
+/**
+ * A page of dialogue. Give one a `link` and a tappable button appears under the
+ * text once it has finished typing — which is how both venues are handed over,
+ * since neither address is one a guest could navigate by on its own.
+ *
+ * A page with a link does not move on by itself; it waits for a tap, so the
+ * button cannot slide away while someone is reaching for it.
+ */
+export type Page = string | { text: string; link: { text: string; href: string } };
+
 export interface NpcDef {
   id: string;
   name: string;
@@ -42,7 +66,7 @@ export interface NpcDef {
   sprite: string;
   /** column in the level where this NPC stands (they stand on the ground) */
   tx: number;
-  pages: string[];
+  pages: Page[];
 }
 
 /**
@@ -70,7 +94,14 @@ export const NPCS: NpcDef[] = [
     tx: 30,
     pages: [
       `So you have met the other grandmother already! Good. We have been planning this together, she and I.`,
-      `The wedding is at ${WEDDING.venue} — ${WEDDING.address}. ${WEDDING.mapsHint}`,
+      {
+        text: `We begin at our own house — the haldi, ${HALDI.date}, ${HALDI.time}. ${HALDI.address}. Little lanes out there, so take the map with you.`,
+        link: { text: 'Haldi in Maps 🗺️', href: HALDI.mapsUrl },
+      },
+      {
+        text: `Then the wedding itself, at ${WEDDING.venue} — ${WEDDING.address}. ${WEDDING.mapsHint}`,
+        link: { text: 'Venue in Maps 🗺️', href: WEDDING.mapsUrl },
+      },
     ],
   },
   {
@@ -188,16 +219,25 @@ export const SHOP = {
 };
 
 /**
- * A line on the invitation card. Objects become tappable links — the venue is
- * one, because "which street was it again" is a question you want a guest's
- * phone to answer, not you.
+ * A line on the invitation card: plain text, a section heading, or a tappable
+ * link. Each event ends in a link, because "which turning was it again" is a
+ * question you want a guest's phone to answer, not you.
  */
-export type InvitationLine = string | { text: string; href: string };
+export type InvitationLine = string | { heading: string } | { text: string; href: string };
 
 export const INVITATION_LINES: InvitationLine[] = [
   `${COUPLE.partner1Full} ♥ ${COUPLE.partner2Full}`,
   'joyfully invite you to their wedding',
   '',
+  // Both events, in the order a guest lives them.
+  { heading: 'Haldi' },
+  `📅  ${HALDI.date}`,
+  `🕓  ${HALDI.time}`,
+  `📍  ${HALDI.venue}`,
+  `${HALDI.address}`,
+  ...(HALDI.mapsUrl ? [{ text: 'Open in Maps 🗺️', href: HALDI.mapsUrl }] : []),
+  '',
+  { heading: 'Wedding' },
   `📅  ${WEDDING.date}`,
   `🕓  ${WEDDING.time}`,
   `📍  ${WEDDING.venue}`,

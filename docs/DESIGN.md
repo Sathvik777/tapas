@@ -222,7 +222,11 @@ Things that look like bugs but aren't, and fixes that will reintroduce real ones
 - **The dialogue card must not take pointer events.** The whole screen advances
   the dialogue, via a full-screen catcher underneath. Give the card
   `pointer-events` back and it will swallow every tap that lands on it — which is
-  exactly where a thumb rests on a phone.
+  exactly where a thumb rests on a phone. The map button on a dialogue page is
+  the one deliberate exception, and it comes with a second rule: **a page
+  carrying a link does not auto-advance.** Dialogue otherwise moves on by itself
+  so the game can be watched one-handed, and a button that slides away while
+  someone is reaching for it is worse than no button at all.
 - **The colour grade is a camera post-effect, not a screen-space quad.** A
   scroll-fixed quad is still scaled by camera zoom, so it covers only part of the
   viewport with a hard seam down the middle. If WebGL is unavailable the grade

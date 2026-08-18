@@ -1,5 +1,12 @@
 import Phaser from 'phaser';
-import { COUPLE_SCENE, INVITATION_LINES, NPCS, SHOP, type GiftDef } from '../content/wedding';
+import {
+  COUPLE_SCENE,
+  INVITATION_LINES,
+  NPCS,
+  SHOP,
+  type GiftDef,
+  type Page,
+} from '../content/wedding';
 import { NPC } from '../objects/NPC';
 import { Player } from '../objects/Player';
 import { DialogueBox } from '../ui/DialogueBox';
@@ -631,7 +638,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   /** Every conversation goes through here so the HUD parks itself consistently. */
-  private say(name: string, pages: string[], role?: string, onClose?: () => void): void {
+  private say(name: string, pages: Page[], role?: string, onClose?: () => void): void {
     this.hud.setHidden(true);
     this.dialogue.show(
       name,
