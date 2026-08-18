@@ -20,8 +20,12 @@ export const COUPLE = {
 export const WEDDING = {
   date: 'Wednesday, October 14, 2026',
   time: '8:30 AM onwards',
-  venue: '[Venue Name]',
-  address: '[Street, City, State]',
+  venue: 'Pawar Convention',
+  // Maps lists the locality twice, once per spelling ("Vishwanathapalle,
+  // Viswanathapalle") — the village and the mandal it names. Printed on a card
+  // that reads as a typo, so the line carries it once. The map link is what
+  // anyone actually navigates by.
+  address: 'Vishwanathapalle, Telangana 502277, India',
   mapsHint: '[e.g. "10 min from the airport, parking on site"]',
   /** Tapped from the invitation card. Empty string hides the link. */
   mapsUrl: 'https://maps.app.goo.gl/v8kZeBMn2J93YpNi9',
