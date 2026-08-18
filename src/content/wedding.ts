@@ -18,11 +18,13 @@ export const COUPLE = {
 };
 
 export const WEDDING = {
-  date: 'Saturday, [Month] [DD], [YYYY]',
-  time: '[4:00 PM] onwards',
+  date: 'Wednesday, October 14, 2026',
+  time: '8:30 AM onwards',
   venue: '[Venue Name]',
   address: '[Street, City, State]',
   mapsHint: '[e.g. "10 min from the airport, parking on site"]',
+  /** Tapped from the invitation card. Empty string hides the link. */
+  mapsUrl: 'https://maps.app.goo.gl/v8kZeBMn2J93YpNi9',
   dressCode: '[Festive / Traditional / Pastels]',
   rsvpBy: '[Month DD, YYYY]',
   rsvpHow: '[RSVP link or phone number]',
@@ -181,7 +183,14 @@ export const SHOP = {
   ] as GiftDef[],
 };
 
-export const INVITATION_LINES = [
+/**
+ * A line on the invitation card. Objects become tappable links — the venue is
+ * one, because "which street was it again" is a question you want a guest's
+ * phone to answer, not you.
+ */
+export type InvitationLine = string | { text: string; href: string };
+
+export const INVITATION_LINES: InvitationLine[] = [
   `${COUPLE.partner1Full} ♥ ${COUPLE.partner2Full}`,
   'joyfully invite you to their wedding',
   '',
@@ -189,6 +198,7 @@ export const INVITATION_LINES = [
   `🕓  ${WEDDING.time}`,
   `📍  ${WEDDING.venue}`,
   `${WEDDING.address}`,
+  ...(WEDDING.mapsUrl ? [{ text: 'Open in Maps 🗺️', href: WEDDING.mapsUrl }] : []),
   '',
   `👗  Dress code: ${WEDDING.dressCode}`,
   `💌  RSVP by ${WEDDING.rsvpBy}`,

@@ -80,15 +80,27 @@ export function injectStylesOnce(): void {
   }
   .wq-card {
     background: #fdf9f0; color: #4a3428;
-    width: min(420px, calc(100vw - 40px)); max-height: 82vh; overflow-y: auto;
+    width: min(420px, calc(100vw - 40px)); max-height: 88vh;
+    overflow-y: auto; overflow-x: hidden;
     border: 4px solid #4a3428; border-radius: 20px; box-sizing: border-box;
     box-shadow: 0 8px 0 rgba(74, 52, 40, 0.45), 0 18px 44px rgba(0, 0, 0, 0.4);
-    padding: 28px 26px; text-align: center; font: 16px/1.55 Georgia, serif;
+    padding: 22px 24px 16px; text-align: center; font: 16px/1.55 Georgia, serif;
   }
   .wq-card h1 { font-size: 27px; margin: 4px 0 2px; color: #c9455c; font-weight: normal; }
   .wq-card h1 .wq-name { white-space: nowrap; }
+  .wq-card .wq-maps {
+    display: inline-block; margin: 8px 0 2px; padding: 5px 13px;
+    color: #4a3428; text-decoration: none;
+    border: 2px solid #4a3428; border-radius: 999px;
+    box-shadow: 0 2px 0 rgba(74, 52, 40, 0.35);
+    font: 15px/1.3 Georgia, serif;
+  }
+  .wq-card .wq-maps:active { transform: translateY(2px); box-shadow: none; }
   .wq-card .wq-sub { font-style: italic; color: #8a7a6a; margin-bottom: 14px; }
-  .wq-card p { margin: 5px 0; }
+  .wq-card p { margin: 4px 0; }
+  /* Blank lines in the invitation group the card into blocks. A full empty
+     line each costs more height than the grouping is worth on a short screen. */
+  .wq-card p.wq-gap { margin: 0; height: 11px; }
   .wq-shop { text-align: left; }
   .wq-shop h1, .wq-shop .wq-sub { text-align: center; }
   .wq-gift {
@@ -105,8 +117,19 @@ export function injectStylesOnce(): void {
   .wq-gift-name { font-size: 17px; }
   .wq-gift-price { color: #c9455c; white-space: nowrap; }
   .wq-gift-note { margin-top: 4px; font-size: 13.5px; font-style: italic; color: #8a7a6a; }
+  /* The footer sticks, so the card can always be dismissed. The invitation is
+     taller than a phone held sideways — which is how the game asks to be
+     played — and a button in the flow sits below the fold, on a card most
+     people won't think to scroll. It is the band rather than the button that
+     sticks: the band spans the full width, so the lines still to be scrolled
+     pass behind the whole row instead of appearing either side of the pill. */
+  .wq-card .wq-foot {
+    position: sticky; bottom: -16px; z-index: 1;
+    margin: 14px -24px -16px; padding: 10px 24px 14px;
+    background: #fdf9f0;
+  }
   .wq-card .wq-close {
-    margin-top: 20px; padding: 10px 24px; border-radius: 999px;
+    padding: 10px 24px; border-radius: 999px;
     border: 3px solid #4a3428; background: #e0576f; color: #fff;
     box-shadow: 0 4px 0 rgba(74, 52, 40, 0.45);
     font: 16px Georgia, serif; cursor: pointer;
