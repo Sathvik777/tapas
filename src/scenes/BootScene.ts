@@ -4,7 +4,7 @@ const CHAR_SHEETS = [
   'char-groom',
   'char-bride',
   'char-npc-mormor',
-  'char-npc-ammamma',
+  'char-npc-pedhamma',
   'char-npc-baker',
   'char-npc-florist',
   'char-npc-musician',

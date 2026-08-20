@@ -934,11 +934,13 @@ def acc_cane(d, ox, by, hy):
 
 
 def acc_saree(d, ox, by, hy):
-    """Ammamma: a pallu drawn over one shoulder, jasmine in her hair, a stick."""
+    """Pedhamma: a pallu drawn over one shoulder, jasmine in her hair.
+
+    No walking stick — she is an aunt, not a grandmother. Mormor keeps the cane.
+    """
     d.polygon([(ox + 11, by), (ox + 17, by), (ox + 24, by + 13), (ox + 18, by + 13)], fill="#c9455c")
     d.line([ox + 12, by + 2, ox + 22, by + 12], fill="#f5d76b")
     d.line([ox + 14, by, ox + 24, by + 10], fill="#f5d76b")
-    d.line([ox + 27, by + 5, ox + 27, by + 20], fill="#7d5333", width=2)
     for i in range(4):  # mallige strand
         d.ellipse([ox + 8, hy + 3 + i * 3, ox + 11, hy + 6 + i * 3], fill=JASMINE)
 
@@ -1183,10 +1185,11 @@ def main() -> None:
     make_character("groom", "#c98d5e", "#221a18", "#3d5a80", "#2b4462")
     make_character("bride", "#7d5033", "#2a2018", "#f7f3ea", "#d8c9b8",
                    long_hair=True, dress=True, curly=True)
-    # the two grandmothers, one from each side
+    # one elder from each side: her grandmother, his aunt (hence the dark hair —
+    # she is a generation younger than Mormor and should not read as her twin)
     make_character("npc-mormor", "#f0d5bd", "#e2e0dc", "#6f8ba8", "#5a7189",
                    long_hair=True, dress=True, accessory="cane")
-    make_character("npc-ammamma", "#b87b4c", "#e8e4e0", "#c9455c", "#a3384b",
+    make_character("npc-pedhamma", "#b87b4c", "#2a2320", "#c9455c", "#a3384b",
                    long_hair=True, dress=True, accessory="saree")
     make_character("npc-baker", "#e8bd95", "#a85a2a", "#e0576f", "#b84457", accessory="tray")
     # the bride's sister — same colouring, a shorter crop so the two read apart

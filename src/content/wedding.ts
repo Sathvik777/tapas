@@ -88,14 +88,14 @@ export const NPCS: NpcDef[] = [
   },
   {
     id: 'venue',
-    name: `[Ammamma's name]`,
-    role: `${COUPLE.partner1}'s grandmother`,
-    sprite: 'char-npc-ammamma',
+    name: `[Pedhamma's name]`,
+    role: `${COUPLE.partner1}'s aunt`,
+    sprite: 'char-npc-pedhamma',
     tx: 30,
     pages: [
-      `So you have met the other grandmother already! Good. We have been planning this together, she and I.`,
+      `So you have met Mormor already! Good. She and I have been planning this between us — one wedding, two families' worth of opinions.`,
       {
-        text: `We begin at our own house — the haldi, ${HALDI.date}, ${HALDI.time}. ${HALDI.address}. Little lanes out there, so take the map with you.`,
+        text: `We begin at our house — the haldi, ${HALDI.date}, ${HALDI.time}. ${HALDI.address}. Little lanes out there, so take the map with you.`,
         link: { text: 'Haldi in Maps 🗺️', href: HALDI.mapsUrl },
       },
       {
@@ -207,7 +207,7 @@ export const SHOP = {
       id: 'laddus',
       label: 'a box of laddus',
       price: 5,
-      note: "Ammamma's recipe. Bring two boxes if you want to be popular.",
+      note: "Pedhamma's recipe. Bring two boxes if you want to be popular.",
     },
     {
       id: 'dalahorse',
