@@ -61,8 +61,11 @@ export type Page = string | { text: string; link: { text: string; href: string }
 export interface NpcDef {
   id: string;
   name: string;
-  /** shown under the name on the dialogue card, e.g. "the bride's grandmother" */
-  role: string;
+  /**
+   * Shown after the name on the dialogue card, e.g. "the bride's grandmother".
+   * Optional: a name that already says the relationship doesn't need it.
+   */
+  role?: string;
   sprite: string;
   /** column in the level where this NPC stands (they stand on the ground) */
   tx: number;
@@ -88,9 +91,9 @@ export const NPCS: NpcDef[] = [
   },
   {
     id: 'venue',
-    // Not a placeholder: Pedhamma is what you call her.
+    // Not a placeholder, and no role after it: Pedhamma is what you call her,
+    // and it already says who she is.
     name: 'Pedhamma',
-    role: `${COUPLE.partner1}'s aunt`,
     sprite: 'char-npc-pedhamma',
     tx: 30,
     pages: [
