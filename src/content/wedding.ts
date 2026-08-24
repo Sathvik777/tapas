@@ -88,7 +88,8 @@ export const NPCS: NpcDef[] = [
   },
   {
     id: 'venue',
-    name: `[Pedhamma's name]`,
+    // Not a placeholder: Pedhamma is what you call her.
+    name: 'Pedhamma',
     role: `${COUPLE.partner1}'s aunt`,
     sprite: 'char-npc-pedhamma',
     tx: 30,
