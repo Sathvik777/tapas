@@ -10,7 +10,7 @@ that will otherwise get "fixed" back into bugs.
 
 A browser game that *is* the wedding invitation. A guest opens a link on their
 phone, walks right for a few minutes, meets the family, and ends up holding the
-invitation — date, venue, dress code, RSVP — having been told it by people
+invitation — both dates, both venues, dress code — having been told it by people
 rather than shown it on a page.
 
 Two constraints follow from the audience, and they outrank everything else:
@@ -175,7 +175,7 @@ gift, they mention it.
 ## Content
 
 Everything a guest reads lives in **`src/content/wedding.ts`** — names, date,
-venue, dress code, RSVP, every line of dialogue, and which level column each
+venues, dress code, every line of dialogue, and which level column each
 villager stands in. Nothing guest-facing should be written anywhere else.
 
 Placeholders are `[bracketed]` so unfilled ones are obvious in a screenshot.

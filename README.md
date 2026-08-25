@@ -33,7 +33,7 @@ close enough to talk to. Landscape looks best; the game says so on startup.
 ## Editing the wedding details
 
 Everything guests read lives in **`src/content/wedding.ts`** — names, date,
-venue, dress code, RSVP, and every NPC's dialogue, plus which column of the
+venues, dress code, and every NPC's dialogue, plus which column of the
 level each character stands in. Replace the `[bracketed]` placeholders with
 your real details.
 

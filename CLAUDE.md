@@ -36,7 +36,7 @@ Node 22, pinned in `.nvmrc`.
   the generator overwrites them. Change the generator instead.
 - **Guest-facing copy only in `src/content/wedding.ts`.** No strings in scenes.
 - **The repo is public.** The couple's own names are published by their choice.
-  Everything else — family names, date, venue, RSVP details — stays a
+  Everything else — family names, dress code, anything not yet decided — stays a
   `[bracketed]` placeholder until the owner fills it in. Don't invent any of it.
 - **Both families, everywhere.** Swedish and South Indian vocabularies share the
   whole level; neither gets a stretch to itself. See `docs/DESIGN.md`.

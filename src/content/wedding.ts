@@ -23,7 +23,6 @@ export const COUPLE = {
   partner2: 'Samina',
   partner1Full: 'Sathvik Katam',
   partner2Full: 'Samina Dahlberg',
-  hashtag: '#[YourWeddingHashtag]',
 };
 
 /**
@@ -53,8 +52,6 @@ export const WEDDING = {
   /** Tapped from the invitation card. Empty string hides the link. */
   mapsUrl: 'https://maps.app.goo.gl/v8kZeBMn2J93YpNi9',
   dressCode: '[Festive / Traditional / Pastels]',
-  rsvpBy: '[Month DD, YYYY]',
-  rsvpHow: '[RSVP link or phone number]',
 };
 
 /**
@@ -152,14 +149,14 @@ export const NPCS: NpcDef[] = [
     ],
   },
   {
-    id: 'rsvp',
+    id: 'rings',
     name: `[Little one's name]`,
     role: 'ring bearer',
     sprite: 'char-npc-kid',
     tx: 155,
     pages: [
       `I'm carrying the rings!! I have been practising walking slowly for WEEKS.`,
-      `Oh! Grown-up thing: please RSVP by ${WEDDING.rsvpBy} — ${WEDDING.rsvpHow}.`,
+      `Two whole days of it. Haldi first — everyone goes yellow, even the aunties — and then the wedding. I have to keep these safe through both.`,
     ],
   },
 ];
@@ -265,8 +262,4 @@ export const INVITATION_LINES: InvitationLine[] = [
   ...(WEDDING.mapsUrl ? [{ text: 'Open in Maps 🗺️', href: WEDDING.mapsUrl }] : []),
   '',
   `👗  Dress code: ${WEDDING.dressCode}`,
-  `💌  RSVP by ${WEDDING.rsvpBy}`,
-  `${WEDDING.rsvpHow}`,
-  '',
-  `${COUPLE.hashtag}`,
 ];
