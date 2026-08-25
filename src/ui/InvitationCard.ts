@@ -9,7 +9,11 @@ export class InvitationCard {
     return !!this.overlay;
   }
 
-  show(lines: InvitationLine[], onClose?: () => void): void {
+  /**
+   * `label` names what the button does next: at the end of the walk it goes
+   * back to the world, on the title screen it goes into it.
+   */
+  show(lines: InvitationLine[], onClose?: () => void, label = 'Keep exploring ✨'): void {
     injectStylesOnce();
     this.destroy();
     this.overlay = el('div', 'wq-overlay');
@@ -58,7 +62,7 @@ export class InvitationCard {
     }
 
     const close = el('button', 'wq-close', el('div', 'wq-foot', card));
-    close.textContent = 'Keep exploring ✨';
+    close.textContent = label;
     close.addEventListener('click', () => {
       this.destroy();
       onClose?.();

@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
-import { COUPLE } from '../content/wedding';
+import { COUPLE, INVITATION_LINES } from '../content/wedding';
+import { InvitationCard } from '../ui/InvitationCard';
+import { TitleMenu } from '../ui/TitleMenu';
 
 export class TitleScene extends Phaser.Scene {
   constructor() {
@@ -51,17 +53,6 @@ export class TitleScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
-      const start = this.add
-        .text(cx, height * 0.72, '— tap to start —', {
-          fontFamily: 'monospace',
-          fontSize: '19px',
-          color: '#fff2c0',
-          stroke: '#3a2b3a',
-          strokeThickness: 4,
-        })
-        .setOrigin(0.5);
-      this.tweens.add({ targets: start, alpha: 0.25, duration: 700, yoyo: true, repeat: -1 });
-
       this.add
         .text(cx, height - 14, 'walk → with arrows / buttons · jump with Space / ⤒ · talk with E / ❤', {
           fontFamily: 'monospace',
@@ -76,11 +67,33 @@ export class TitleScene extends Phaser.Scene {
     layout();
     this.scale.on('resize', layout);
 
+    const menu = new TitleMenu();
+    const card = new InvitationCard();
+
     const begin = () => {
       this.scale.off('resize', layout);
+      menu.destroy();
+      card.destroy();
       this.scene.start('world');
     };
-    this.input.once('pointerdown', begin);
-    this.input.keyboard?.once('keydown', begin);
+
+    menu.show(
+      // Reading the invitation and then walking is the natural order, so the
+      // card's own button carries on into the game rather than dead-ending.
+      () => card.show(INVITATION_LINES, begin, 'Take the walk →'),
+      begin,
+    );
+
+    // Any key still starts the walk, the way "tap to start" used to — except
+    // while the card is up, where a keypress would start the game underneath it.
+    this.input.keyboard?.on('keydown', () => {
+      if (!card.isOpen) begin();
+    });
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off('resize', layout);
+      menu.destroy();
+      card.destroy();
+    });
   }
 }

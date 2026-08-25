@@ -4,6 +4,15 @@
  * (Remember: this repo is public — only commit details you're happy to share.)
  */
 
+import { readGuestName } from '../guest';
+
+/**
+ * Who this link was sent to, from `?to=` — see `src/guest.ts`. Null for a link
+ * with no name on it, and every line below has to still read properly then,
+ * because that is the link anyone forwards to anyone else.
+ */
+export const GUEST = readGuestName();
+
 /**
  * `partner1` / `partner2` are the everyday names — villagers use them in
  * conversation, so they should read the way a grandmother would say them.
@@ -168,7 +177,11 @@ export const COUPLE_SCENE = {
     `Go on, say hello to the rest. We are not going anywhere. 💐`,
   ],
   greeting: [
-    `You found us. Thank you for walking all this way to get here.`,
+    // Named here too — being recognised by the couple at the end of the walk is
+    // worth more than being named again on the way in.
+    GUEST
+      ? `You found us, ${GUEST}. Thank you for walking all this way to get here.`
+      : `You found us. Thank you for walking all this way to get here.`,
     `[Write the line you would want every single guest to read — the two of you, in your own words.]`,
   ],
   /** Only shown if the guest bought something at the stall. */
@@ -231,7 +244,10 @@ export type InvitationLine = string | { heading: string } | { text: string; href
 
 export const INVITATION_LINES: InvitationLine[] = [
   `${COUPLE.partner1Full} ♥ ${COUPLE.partner2Full}`,
-  'joyfully invite you to their wedding',
+  // The named line is the whole point of a personal invitation, so the name
+  // goes where a printed card would put it — inside the sentence, not in a
+  // "Dear ..." bolted on above it.
+  GUEST ? `joyfully invite ${GUEST} to their wedding` : 'joyfully invite you to their wedding',
   '',
   // Both events, in the order a guest lives them.
   { heading: 'Haldi' },

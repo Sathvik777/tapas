@@ -39,6 +39,27 @@ your real details.
 
 > ⚠️ This repo is public: only commit details you're happy for anyone to see.
 
+## Sending it to someone by name
+
+Add `?to=` to the link and the invitation is addressed to them — on the card
+("*joyfully invite Anders & Eva to their wedding*") and again from the two of
+you at the end of the walk, if they play that far.
+
+```
+https://<your-url>/?to=Anders%20%26%20Eva      → Anders & Eva
+https://<your-url>/?to=Mormor                  → Mormor
+https://<your-url>/                            → "joyfully invite you"
+```
+
+URL-encode it: a space is `%20` and an ampersand is `%26` — an unescaped `&`
+would end the parameter and the second name would vanish. In a browser console,
+`encodeURIComponent("Anders & Eva")` does it for you.
+
+There is deliberately **no guest list in the repo** — it is public, and a list
+of everyone invited would be published with it. Each link only knows the one
+name it carries, and a link with no name still reads correctly, which is the
+one that gets forwarded around.
+
 ## Continuous deployment (Vercel)
 
 Vercel is connected, and **every push to this branch redeploys the same preview URL**:

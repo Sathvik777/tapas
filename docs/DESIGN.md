@@ -148,6 +148,21 @@ so the game can be watched one-handed or handed to someone who is not going to
 tap. Tapping still works and simply gets there sooner. The whole screen is the
 target — see the traps below.
 
+### Two doors, and a named link
+
+The title screen offers **the invitation** and **the walk**, side by side. The
+walk used to be the only way in, with each villager holding one piece of the
+details and the card appearing once you had met all six. That is a good game
+and a bad invitation: most guests open a wedding link to find out when and
+where, and asking them to finish a platformer first loses them. The walk keeps
+every piece — nothing was moved out of it — but it is now something a guest
+chooses rather than something they must survive.
+
+The guest's name rides in the URL (`?to=`, parsed in `src/guest.ts`) and lands
+in exactly two places: the line on the card, and the couple's first words at
+the mandap. **A link with no name must read correctly**, because that is the
+one that gets forwarded on. There is no guest list in the repo — it is public.
+
 ### The finale
 
 Hearts scattered along the road are **currency**, which is what gives them a

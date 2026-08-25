@@ -87,6 +87,19 @@ export function injectStylesOnce(): void {
     right: 26px; bottom: max(120px, calc(env(safe-area-inset-bottom) + 98px));
     background: #e0576f; color: #fff;
   }
+  .wq-doors {
+    position: fixed; left: 50%; top: 68%; transform: translateX(-50%);
+    z-index: 26; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+    width: max-content; max-width: calc(100vw - 32px);
+  }
+  .wq-door {
+    padding: 11px 22px; border-radius: 999px;
+    border: 3px solid #4a3428; background: #fdf9f0; color: #4a3428;
+    box-shadow: 0 4px 0 rgba(74, 52, 40, 0.45);
+    font: 17px Georgia, serif; cursor: pointer;
+  }
+  .wq-door-go { background: #e0576f; color: #fff; }
+  .wq-door:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(74, 52, 40, 0.45); }
   .wq-overlay {
     position: fixed; inset: 0; z-index: 40;
     background: rgba(20, 14, 28, 0.6);
