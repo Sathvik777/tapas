@@ -34,7 +34,7 @@ export const COUPLE = {
  */
 export const HALDI = {
   date: 'Monday, October 12, 2026',
-  time: '[Time]',
+  time: '9:00 AM onwards',
   venue: `${COUPLE.partner1}'s family home`,
   address: 'Near Cherial Government Hospital, Close to BD Colony, Cherial',
   mapsUrl: 'https://maps.app.goo.gl/SRhkB7F6FoQvq9vu7',
