@@ -43,7 +43,7 @@ export class ShopCard {
       });
     }
 
-    const close = el('button', 'wq-close', card);
+    const close = el('button', 'wq-close', el('div', 'wq-foot', card));
     close.textContent = 'Maybe later';
     close.addEventListener('click', () => {
       this.destroy();

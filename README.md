@@ -33,11 +33,32 @@ close enough to talk to. Landscape looks best; the game says so on startup.
 ## Editing the wedding details
 
 Everything guests read lives in **`src/content/wedding.ts`** — names, date,
-venue, dress code, RSVP, and every NPC's dialogue, plus which column of the
+venues, dress code, and every NPC's dialogue, plus which column of the
 level each character stands in. Replace the `[bracketed]` placeholders with
 your real details.
 
 > ⚠️ This repo is public: only commit details you're happy for anyone to see.
+
+## Sending it to someone by name
+
+Add `?to=` to the link and the invitation is addressed to them — on the card
+("*joyfully invite Anders & Eva to their wedding*") and again from the two of
+you at the end of the walk, if they play that far.
+
+```
+https://<your-url>/?to=Anders%20%26%20Eva      → Anders & Eva
+https://<your-url>/?to=Mormor                  → Mormor
+https://<your-url>/                            → "joyfully invite you"
+```
+
+URL-encode it: a space is `%20` and an ampersand is `%26` — an unescaped `&`
+would end the parameter and the second name would vanish. In a browser console,
+`encodeURIComponent("Anders & Eva")` does it for you.
+
+There is deliberately **no guest list in the repo** — it is public, and a list
+of everyone invited would be published with it. Each link only knows the one
+name it carries, and a link with no name still reads correctly, which is the
+one that gets forwarded around.
 
 ## Continuous deployment (Vercel)
 
@@ -97,7 +118,7 @@ src/ui/                 dialogue box, HUD, invitation card, touch controls (DOM-
 `WorldScene.LAYERS` defines the parallax stack. Each distant band is anchored by
 its *ridge line* — the y inside the artwork where its horizon sits — placed at a
 fraction of the view height, so the horizon holds together at any zoom or aspect
-ratio. `fg-fence` uses a scroll factor above 1, which is what makes it read as
+ratio. `fg-grass` uses a scroll factor above 1, which is what makes it read as
 being in front of the player. The camera picks an integer zoom that shows about
 260px of world vertically and frames the player ~70% down the screen.
 
@@ -109,7 +130,7 @@ being in front of the player. The camera picks an integer zoom that shows about
 - [x] **Detail pass 2** — the cast recast as family, each with a prop that says who they are, blinking, landing squash and over-head emotes
 - [x] **Detail pass 3** — a world that moves: drifting clouds, swaying grass, bird flocks, butterflies over the flower patches, and petals thickening as the wedding nears
 - [x] **Detail pass 4a** — landmarks in both vocabularies: falu-red cottage, birch, midsummer pole and dala horse alongside a mandap, marigold garlands, banana plants, kolam and brass lamps that light up at dusk
-- [ ] Detail pass 4b — foreground variety (stone wall and tall-grass stretches instead of one fence)
+- [ ] Detail pass 4b — foreground variety (stone-edge and reed stretches instead of one grass verge)
 - [x] **The finale** — the couple stand under the mandap instead of a signpost, hearts became currency at a gift stall, and reaching the end sets off fireworks
 - [ ] Detail pass 5 — the two of you as the playable leads, plus a companion
 - [ ] Puzzles / quiz about us → earn points (NPC "visited" and heart tracking already in place)

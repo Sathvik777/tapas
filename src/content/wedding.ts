@@ -4,32 +4,78 @@
  * (Remember: this repo is public — only commit details you're happy to share.)
  */
 
+import { readGuestName } from '../guest';
+
+/**
+ * Who this link was sent to, from `?to=` — see `src/guest.ts`. Null for a link
+ * with no name on it, and every line below has to still read properly then,
+ * because that is the link anyone forwards to anyone else.
+ */
+export const GUEST = readGuestName();
+
+/**
+ * `partner1` / `partner2` are the everyday names — villagers use them in
+ * conversation, so they should read the way a grandmother would say them.
+ * The `*Full` forms are for the invitation card, where the full name belongs.
+ */
 export const COUPLE = {
-  partner1: '[Groom]',
-  partner2: '[Bride]',
-  hashtag: '#[YourWeddingHashtag]',
+  partner1: 'Sathvik',
+  partner2: 'Samina',
+  partner1Full: 'Sathvik Katam',
+  partner2Full: 'Samina Dahlberg',
+};
+
+/**
+ * The haldi, two days before, at his parents' house. It has its own map link
+ * because the address is a landmark rather than a street — "near the government
+ * hospital" is how you say where a village house is, and it is not something a
+ * guest can type into a phone.
+ */
+export const HALDI = {
+  date: 'Monday, October 12, 2026',
+  time: '9:00 AM onwards',
+  venue: `${COUPLE.partner1}'s family home`,
+  address: 'Near Cherial Government Hospital, Close to BD Colony, Cherial',
+  mapsUrl: 'https://maps.app.goo.gl/SRhkB7F6FoQvq9vu7',
 };
 
 export const WEDDING = {
-  date: 'Saturday, [Month] [DD], [YYYY]',
-  time: '[4:00 PM] onwards',
-  venue: '[Venue Name]',
-  address: '[Street, City, State]',
+  date: 'Wednesday, October 14, 2026',
+  time: '8:30 AM onwards',
+  venue: 'Pawar Convention',
+  // Maps lists the locality twice, once per spelling ("Vishwanathapalle,
+  // Viswanathapalle") — the village and the mandal it names. Printed on a card
+  // that reads as a typo, so the line carries it once. The map link is what
+  // anyone actually navigates by.
+  address: 'Vishwanathapalle, Telangana 502277, India',
   mapsHint: '[e.g. "10 min from the airport, parking on site"]',
+  /** Tapped from the invitation card. Empty string hides the link. */
+  mapsUrl: 'https://maps.app.goo.gl/v8kZeBMn2J93YpNi9',
   dressCode: '[Festive / Traditional / Pastels]',
-  rsvpBy: '[Month DD, YYYY]',
-  rsvpHow: '[RSVP link or phone number]',
 };
+
+/**
+ * A page of dialogue. Give one a `link` and a tappable button appears under the
+ * text once it has finished typing — which is how both venues are handed over,
+ * since neither address is one a guest could navigate by on its own.
+ *
+ * A page with a link does not move on by itself; it waits for a tap, so the
+ * button cannot slide away while someone is reaching for it.
+ */
+export type Page = string | { text: string; link: { text: string; href: string } };
 
 export interface NpcDef {
   id: string;
   name: string;
-  /** shown under the name on the dialogue card, e.g. "the bride's grandmother" */
-  role: string;
+  /**
+   * Shown after the name on the dialogue card, e.g. "the bride's grandmother".
+   * Optional: a name that already says the relationship doesn't need it.
+   */
+  role?: string;
   sprite: string;
   /** column in the level where this NPC stands (they stand on the ground) */
   tx: number;
-  pages: string[];
+  pages: Page[];
 }
 
 /**
@@ -51,24 +97,33 @@ export const NPCS: NpcDef[] = [
   },
   {
     id: 'venue',
-    name: `[Ammamma's name]`,
-    role: `${COUPLE.partner1}'s grandmother`,
-    sprite: 'char-npc-ammamma',
+    // Not a placeholder, and no role after it: Pedhamma is what you call her,
+    // and it already says who she is.
+    name: 'Pedhamma',
+    sprite: 'char-npc-pedhamma',
     tx: 30,
     pages: [
-      `So you have met the other grandmother already! Good. We have been planning this together, she and I.`,
-      `The wedding is at ${WEDDING.venue} — ${WEDDING.address}. ${WEDDING.mapsHint}`,
+      `So you have met Mormor already! Good. She and I have been planning this between us — one wedding, two families' worth of opinions.`,
+      {
+        text: `We begin at our house — the haldi, ${HALDI.date}, ${HALDI.time}. ${HALDI.address}. Little lanes out there, so take the map with you.`,
+        link: { text: 'Haldi in Maps 🗺️', href: HALDI.mapsUrl },
+      },
+      {
+        text: `Then the wedding itself, at ${WEDDING.venue} — ${WEDDING.address}. ${WEDDING.mapsHint}`,
+        link: { text: 'Venue in Maps 🗺️', href: WEDDING.mapsUrl },
+      },
     ],
   },
   {
     id: 'story',
-    name: `[Cousin's name]`,
+    name: 'Samyukth',
     role: 'playing the nadaswaram',
     sprite: 'char-npc-musician',
     tx: 68,
     pages: [
-      `I am practising for the procession. Do you want to hear how those two met?`,
-      `[Write your how-we-met story here — where you first met, the proposal, a fun fact or two.]`,
+      `I am practising for the procession. Do you want to hear how my brother met ${COUPLE.partner2}?`,
+      `Eight years ago to the day. The fourteenth of October, an Irish pub in Stockholm called The Liffey — and then on to Omnipollos Hatt.`,
+      `Which is why the wedding is on the fourteenth. Same date, eight years on.`,
       `Two families, one tune. It took some rehearsing. ♪`,
     ],
   },
@@ -95,14 +150,14 @@ export const NPCS: NpcDef[] = [
     ],
   },
   {
-    id: 'rsvp',
+    id: 'rings',
     name: `[Little one's name]`,
     role: 'ring bearer',
     sprite: 'char-npc-kid',
     tx: 155,
     pages: [
       `I'm carrying the rings!! I have been practising walking slowly for WEEKS.`,
-      `Oh! Grown-up thing: please RSVP by ${WEDDING.rsvpBy} — ${WEDDING.rsvpHow}.`,
+      `Two whole days of it. Haldi first — everyone goes yellow, even the aunties — and then the wedding. I have to keep these safe through both.`,
     ],
   },
 ];
@@ -120,7 +175,11 @@ export const COUPLE_SCENE = {
     `Go on, say hello to the rest. We are not going anywhere. 💐`,
   ],
   greeting: [
-    `You found us. Thank you for walking all this way to get here.`,
+    // Named here too — being recognised by the couple at the end of the walk is
+    // worth more than being named again on the way in.
+    GUEST
+      ? `You found us, ${GUEST}. Thank you for walking all this way to get here.`
+      : `You found us. Thank you for walking all this way to get here.`,
     `[Write the line you would want every single guest to read — the two of you, in your own words.]`,
   ],
   /** Only shown if the guest bought something at the stall. */
@@ -163,7 +222,7 @@ export const SHOP = {
       id: 'laddus',
       label: 'a box of laddus',
       price: 5,
-      note: "Ammamma's recipe. Bring two boxes if you want to be popular.",
+      note: "Pedhamma's recipe. Bring two boxes if you want to be popular.",
     },
     {
       id: 'dalahorse',
@@ -174,18 +233,34 @@ export const SHOP = {
   ] as GiftDef[],
 };
 
-export const INVITATION_LINES = [
-  `${COUPLE.partner1} ♥ ${COUPLE.partner2}`,
-  'joyfully invite you to their wedding',
+/**
+ * A line on the invitation card: plain text, a section heading, or a tappable
+ * link. Each event ends in a link, because "which turning was it again" is a
+ * question you want a guest's phone to answer, not you.
+ */
+export type InvitationLine = string | { heading: string } | { text: string; href: string };
+
+export const INVITATION_LINES: InvitationLine[] = [
+  `${COUPLE.partner1Full} ♥ ${COUPLE.partner2Full}`,
+  // The named line is the whole point of a personal invitation, so the name
+  // goes where a printed card would put it — inside the sentence, not in a
+  // "Dear ..." bolted on above it.
+  GUEST ? `joyfully invite ${GUEST} to their wedding` : 'joyfully invite you to their wedding',
   '',
+  // Both events, in the order a guest lives them.
+  { heading: 'Haldi' },
+  `📅  ${HALDI.date}`,
+  `🕓  ${HALDI.time}`,
+  `📍  ${HALDI.venue}`,
+  `${HALDI.address}`,
+  ...(HALDI.mapsUrl ? [{ text: 'Open in Maps 🗺️', href: HALDI.mapsUrl }] : []),
+  '',
+  { heading: 'Wedding' },
   `📅  ${WEDDING.date}`,
   `🕓  ${WEDDING.time}`,
   `📍  ${WEDDING.venue}`,
   `${WEDDING.address}`,
+  ...(WEDDING.mapsUrl ? [{ text: 'Open in Maps 🗺️', href: WEDDING.mapsUrl }] : []),
   '',
   `👗  Dress code: ${WEDDING.dressCode}`,
-  `💌  RSVP by ${WEDDING.rsvpBy}`,
-  `${WEDDING.rsvpHow}`,
-  '',
-  `${COUPLE.hashtag}`,
 ];

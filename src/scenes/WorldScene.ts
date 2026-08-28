@@ -1,5 +1,12 @@
 import Phaser from 'phaser';
-import { COUPLE_SCENE, INVITATION_LINES, NPCS, SHOP, type GiftDef } from '../content/wedding';
+import {
+  COUPLE_SCENE,
+  INVITATION_LINES,
+  NPCS,
+  SHOP,
+  type GiftDef,
+  type Page,
+} from '../content/wedding';
 import { NPC } from '../objects/NPC';
 import { Player } from '../objects/Player';
 import { DialogueBox } from '../ui/DialogueBox';
@@ -275,8 +282,10 @@ export class WorldScene extends Phaser.Scene {
   //
   // Each band is anchored by its *ridge line* — the y inside the art where its
   // horizon sits — placed at a fraction of the view height, so the horizon
-  // stack holds together at any zoom or aspect ratio. `fg-fence` uses a factor
+  // stack holds together at any zoom or aspect ratio. `fg-grass` uses a factor
   // above 1 so it slides past faster than the world: the foreground depth cue.
+  // It is kept low on purpose (see the generator) — the depth comes from the
+  // speed it passes at, not from height, and anything taller hides the road.
   private static readonly BG_MARGIN = 64;
 
   private static readonly LAYERS: Array<{
@@ -295,7 +304,8 @@ export class WorldScene extends Phaser.Scene {
     { key: 'bg-mountains', factor: 0.15, depth: -3, ridgeY: 72, frac: 0.38 },
     { key: 'bg-hills', factor: 0.28, depth: -2, ridgeY: 62, frac: 0.5 },
     { key: 'bg-hedge', factor: 0.45, depth: -1, ridgeY: 40, frac: 0.61 },
-    { key: 'fg-fence', factor: 1.25, depth: 40, ridgeY: 0, frac: 0.8 },
+    // ridgeY matches FG_RIDGE_Y in scripts/gen_placeholder_assets.py
+    { key: 'fg-grass', factor: 1.25, depth: 40, ridgeY: 28, frac: 0.9 },
   ];
 
   private createBackground(): void {
@@ -510,8 +520,18 @@ export class WorldScene extends Phaser.Scene {
 
   /** Props that don't simply stand on the ground: [originY, y offset]. */
   private static readonly PROP_ANCHOR: Partial<Record<PropType, [number, number]>> = {
-    kolam: [0, 3], // lies flat on the road just below the grass line
-    garland: [0, -134], // strung overhead between the poles
+    // Centred on the ground line, so it lies at the feet of whoever is standing
+    // on it. It used to hang below the line, out on the dirt: the camera
+    // deadzone lets the ground line sit as low as 81% of the frame, and the
+    // foreground verge starts at 90%, so there are camera positions where
+    // nothing below the line is visible at all and the kolam simply vanished.
+    kolam: [0.5, 2],
+    // A garland is *tied* to things: -84 puts its two ends on a bunting pole's
+    // crossbar (the pole is 92 tall, its crossbar 8px down from the top) and on
+    // the cottage's roof slope. It used to hang at -134, which cleared both and
+    // left it floating in the sky. If you move a garland, move it to a column
+    // where both ends land on something — see the pairs in level.ts.
+    garland: [0, -84],
     toran: [0, -74], // strung along the cottage eaves, above the door
   };
 
@@ -618,7 +638,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   /** Every conversation goes through here so the HUD parks itself consistently. */
-  private say(name: string, pages: string[], role?: string, onClose?: () => void): void {
+  private say(name: string, pages: Page[], role?: string, onClose?: () => void): void {
     this.hud.setHidden(true);
     this.dialogue.show(
       name,

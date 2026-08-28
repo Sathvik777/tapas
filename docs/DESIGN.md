@@ -10,7 +10,7 @@ that will otherwise get "fixed" back into bugs.
 
 A browser game that *is* the wedding invitation. A guest opens a link on their
 phone, walks right for a few minutes, meets the family, and ends up holding the
-invitation — date, venue, dress code, RSVP — having been told it by people
+invitation — both dates, both venues, dress code — having been told it by people
 rather than shown it on a page.
 
 Two constraints follow from the audience, and they outrank everything else:
@@ -83,9 +83,17 @@ horizon sits — placed at a fraction of the view height. That keeps the horizon
 stack coherent at any zoom, aspect ratio or device. Anchoring by the bottom edge
 instead breaks the moment the viewport changes shape.
 
-`fg-fence` uses a scroll factor **above 1** so it slides past faster than the
+`fg-grass` uses a scroll factor **above 1** so it slides past faster than the
 world. That single layer is doing most of the work of making the scene read as
 three-dimensional.
+
+**Keep the foreground low.** This layer used to be a waist-high fence
+(`fg-fence.png`). It looked right in the source art and wrong in the game: at
+the zoom the game actually runs at it took the bottom fifth of the frame and
+walled off the road, the dirt and anything standing near the camera. The verge
+that replaced it is a shallow grass bank with tufts — the depth cue comes from
+the *speed* the layer passes at, not its height. Its ridge row is `FG_RIDGE_Y`
+in the generator and `ridgeY` in `LAYERS`; the two have to agree.
 
 Bands are plain world objects re-anchored to the camera every frame rather than
 `scrollFactor` children, and oversized by `BG_MARGIN` so the one-frame follow lag
@@ -94,7 +102,7 @@ never exposes an edge.
 ### Depth order
 
 Roughly: parallax bands are negative, the **tilemap sits at 0**, props 0.4–7,
-heart pickups 8, villagers 10, player 20, foreground fence 40, emotes 60,
+heart pickups 8, villagers 10, player 20, foreground verge 40, emotes 60,
 particles 90, the couple's marker 100.
 
 The tilemap is at 0 rather than 5 specifically so contact shadows can sit *under*
@@ -107,7 +115,7 @@ Integer zoom only — fractional zoom makes pixel art shimmer and can bleed
 neighbouring tiles. The zoom that gets picked shows roughly 260px of world
 height, with a floor so the view never gets narrower than 300px (which is what a
 phone held upright would otherwise do). The player sits ~70% down the frame:
-sky and hills above, road and fence below.
+sky and hills above, road and grass verge below.
 
 The level is 24 rows deep although the ground only uses rows 9–13. The extra
 depth exists so a tall viewport can never scroll past the bottom of the world
@@ -140,6 +148,21 @@ so the game can be watched one-handed or handed to someone who is not going to
 tap. Tapping still works and simply gets there sooner. The whole screen is the
 target — see the traps below.
 
+### Two doors, and a named link
+
+The title screen offers **the invitation** and **the walk**, side by side. The
+walk used to be the only way in, with each villager holding one piece of the
+details and the card appearing once you had met all six. That is a good game
+and a bad invitation: most guests open a wedding link to find out when and
+where, and asking them to finish a platformer first loses them. The walk keeps
+every piece — nothing was moved out of it — but it is now something a guest
+chooses rather than something they must survive.
+
+The guest's name rides in the URL (`?to=`, parsed in `src/guest.ts`) and lands
+in exactly two places: the line on the card, and the couple's first words at
+the mandap. **A link with no name must read correctly**, because that is the
+one that gets forwarded on. There is no guest list in the repo — it is public.
+
 ### The finale
 
 Hearts scattered along the road are **currency**, which is what gives them a
@@ -152,7 +175,7 @@ gift, they mention it.
 ## Content
 
 Everything a guest reads lives in **`src/content/wedding.ts`** — names, date,
-venue, dress code, RSVP, every line of dialogue, and which level column each
+venues, dress code, every line of dialogue, and which level column each
 villager stands in. Nothing guest-facing should be written anywhere else.
 
 Placeholders are `[bracketed]` so unfilled ones are obvious in a screenshot.
@@ -214,7 +237,11 @@ Things that look like bugs but aren't, and fixes that will reintroduce real ones
 - **The dialogue card must not take pointer events.** The whole screen advances
   the dialogue, via a full-screen catcher underneath. Give the card
   `pointer-events` back and it will swallow every tap that lands on it — which is
-  exactly where a thumb rests on a phone.
+  exactly where a thumb rests on a phone. The map button on a dialogue page is
+  the one deliberate exception, and it comes with a second rule: **a page
+  carrying a link does not auto-advance.** Dialogue otherwise moves on by itself
+  so the game can be watched one-handed, and a button that slides away while
+  someone is reaching for it is worse than no button at all.
 - **The colour grade is a camera post-effect, not a screen-space quad.** A
   scroll-fixed quad is still scaled by camera zoom, so it covers only part of the
   viewport with a hard seam down the middle. If WebGL is unavailable the grade
@@ -232,14 +259,31 @@ Things that look like bugs but aren't, and fixes that will reintroduce real ones
 - **Preview deployments may sit behind a Vercel login.** That is deployment
   protection, not a broken build — Settings → Deployment Protection → Vercel
   Authentication.
+- **The bride and the florist are drawn to look like the real people.** Their
+  colouring and `curly=True` in `make_character` are deliberate, not the
+  generator's defaults left unfinished. Don't normalise them back toward the
+  rest of the cast.
+- **Anything that hangs or lies flat has to be tied to something.** A garland
+  floats unless both of its ends land on a bunting pole's crossbar or the
+  cottage roof — the art spans four columns, so its two anchors have to be four
+  columns apart and the same height. A kolam belongs at a building's threshold,
+  sharing that building's column. Both rules are written out over `PROPS` in
+  `level.ts`; the offsets they depend on are in `WorldScene.PROP_ANCHOR`.
+- **Nothing important goes below the ground line.** The camera deadzone lets the
+  ground line sit anywhere from 59% to 81% down the frame while the foreground
+  verge starts at 90%, so at the bottom of that range there is no visible road
+  at all. The kolam used to lie out on the dirt and vanished for whole stretches
+  of the walk; it is centred on the ground line now, at the feet of whoever is
+  standing on it.
 
 ---
 
 ## Still open
 
-- **Foreground variety.** One fence texture runs the entire level. Swapping it
-  by zone — fence, stone wall, tall grass — plus the occasional foreground tree
-  trunk sweeping past, would multiply the sense of travel for very little work.
+- **Foreground variety.** One grass verge runs the entire level. Swapping it by
+  zone — meadow grass, a low stone edge, reeds — plus the occasional foreground
+  tree trunk sweeping past, would multiply the sense of travel for very little
+  work. Whatever replaces it stays low; see the note in Parallax.
 - **The two leads.** The player is still a generic figure. Needs real outfits
   and colouring, which unlocks the groom/bride character select the `Player`
   class already takes a sprite key for.

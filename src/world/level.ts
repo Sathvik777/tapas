@@ -60,21 +60,21 @@ const PLATFORMS: Array<[number, number, number]> = [
   [128, 130, 8],
 ];
 
-/** Heart pickups: [col, row]. */
+/** Heart pickups: [col, row]. Kept clear of the bunting poles and garlands. */
 const HEARTS: Array<[number, number]> = [
   [16, 9],
   [36, 12],
   [45, 6],
   [53, 5],
   [59, 6],
-  [70, 8],
+  [66, 8],
   [87, 4],
   [92, 7],
   [110, 12],
   [117, 6],
   [123, 5],
   [129, 6],
-  [150, 8],
+  [154, 8],
   [165, 8],
 ];
 
@@ -110,6 +110,16 @@ export interface PropDef {
  * other: birch grows beside banana, a falu-red cottage wears a mango-leaf
  * toran, and marigold garlands hang over a midsummer pole. NPC columns
  * (12, 30, 68, 100, 135, 155) are kept clear so nobody stands inside a prop.
+ *
+ * Two placements are not free choices:
+ *
+ * - **A kolam goes at the threshold of the building it belongs to**, so it
+ *   shares that building's column (26 with the cottage, 171 with the mandap).
+ *   Off to one side it reads as a stain on the road rather than a welcome.
+ * - **A garland is tied at both ends.** The art is 128px of drooping marigolds,
+ *   which spans four columns, so each one sits midway between two anchors that
+ *   are four columns apart and are the same height — two bunting poles, or a
+ *   pole and the cottage roof. Anything else leaves it hanging in mid-air.
  */
 const PROPS: PropDef[] = [
   { type: 'meadow', tx: 2 },
@@ -119,10 +129,10 @@ const PROPS: PropDef[] = [
   { type: 'sign', tx: 15 },
   { type: 'dalahorse', tx: 18 },
   { type: 'pole', tx: 21 },
-  { type: 'garland', tx: 22 },
+  { type: 'garland', tx: 23 }, // pole 21 → cottage roof
   { type: 'cottage', tx: 26 },
   { type: 'toran', tx: 26 },
-  { type: 'kolam', tx: 28 },
+  { type: 'kolam', tx: 26 }, // at the cottage door
   { type: 'meadow', tx: 33 },
   { type: 'lamp', tx: 36 },
   { type: 'tree', tx: 41 },
@@ -130,9 +140,10 @@ const PROPS: PropDef[] = [
   { type: 'rock', tx: 50 },
   { type: 'maypole', tx: 55 },
   { type: 'bush', tx: 62 },
-  { type: 'pole', tx: 65 },
-  { type: 'garland', tx: 66 },
+  { type: 'pole', tx: 70 },
+  { type: 'garland', tx: 72 }, // pole 70 → pole 74
   { type: 'meadow', tx: 72 },
+  { type: 'pole', tx: 74 },
   { type: 'birch', tx: 76 },
   { type: 'tree', tx: 80 },
   { type: 'rock', tx: 84 },
@@ -142,18 +153,20 @@ const PROPS: PropDef[] = [
   { type: 'lamp', tx: 103 },
   { type: 'tree', tx: 106 },
   { type: 'meadow', tx: 109 },
-  { type: 'pole', tx: 113 },
-  { type: 'garland', tx: 114 },
   { type: 'kolam', tx: 117 },
+  { type: 'pole', tx: 120 },
   { type: 'bush', tx: 121 },
+  { type: 'garland', tx: 122 }, // pole 120 → pole 124
+  { type: 'pole', tx: 124 },
   { type: 'sign', tx: 126 },
   { type: 'rock', tx: 131 },
   { type: 'banana', tx: 138 },
   { type: 'birch', tx: 141 },
   { type: 'tree', tx: 145 },
   { type: 'meadow', tx: 148 },
+  { type: 'pole', tx: 148 },
+  { type: 'garland', tx: 150 }, // pole 148 → pole 152
   { type: 'pole', tx: 152 },
-  { type: 'garland', tx: 153 },
   { type: 'tree', tx: 158 },
   { type: 'dalahorse', tx: 161 },
   { type: 'maypole', tx: 164 },

@@ -3,7 +3,7 @@
 
 Art direction: cozy countryside side-scroller — layered parallax with
 atmospheric perspective (far hazy mountains -> green hills -> hedgerow),
-a foreground fence/grass bank that passes in front of the player, and
+a foreground grass verge that passes in front of the player, and
 chunky dark outlines on characters and props.
 
 Run:  python3 scripts/gen_placeholder_assets.py
@@ -34,6 +34,10 @@ STONE = "#9a9186"
 WOOD = "#a9784e"
 WOOD_DARK = "#7d5333"
 WOOD_EDGE = "#4a3323"
+
+# Row inside fg-grass.png where the grass line sits. WorldScene anchors the
+# layer by this row (`ridgeY` in its LAYERS table) — keep the two in step.
+FG_RIDGE_Y = 28
 
 
 def lerp(a, b, t):
@@ -378,26 +382,22 @@ def make_hedge() -> None:
 
 
 def make_foreground() -> None:
-    """Fence + grass bank drawn IN FRONT of the player (the Milki-style depth cue)."""
+    """Grass verge drawn IN FRONT of the player (the Milki-style depth cue).
+
+    This used to be a waist-high fence. At the zoom the game actually runs at,
+    a fence tall enough to read as pickets ate the bottom fifth of the frame and
+    hid the road, so the verge is deliberately shallow: enough grass to sell the
+    parallax, low enough to see over. Keep it that way — the layer earns its
+    place by *moving*, not by being tall.
+    """
+    # Only the top ~40px is ever on screen; the rest is solid green skirt so a
+    # tall viewport (a phone held upright, where the camera falls back to zoom 1)
+    # can't out-run the bottom of the texture and show a gap.
     w, h = 512, 240
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
 
-    # low fence first, grass bank drawn over its feet
-    for i, px_ in enumerate(range(10, w, 64)):
-        top = 8 + (i % 3)
-        d.rectangle([px_ - 1, top - 2, px_ + 8, 76], fill=WOOD_EDGE)
-        d.rectangle([px_, top, px_ + 7, 74], fill=WOOD)
-        d.rectangle([px_, top, px_ + 2, 74], fill="#c08d5f")
-        d.rectangle([px_ + 5, top, px_ + 7, 74], fill=WOOD_DARK)
-    for ry in (20, 44):
-        d.rectangle([0, ry - 2, w, ry + 7], fill=WOOD_EDGE)
-        d.rectangle([0, ry, w, ry + 5], fill=WOOD)
-        d.rectangle([0, ry, w, ry + 1], fill="#c08d5f")
-        d.rectangle([0, ry + 4, w, ry + 5], fill=WOOD_DARK)
-
-    # grass bank in front of the fence feet
-    ys = ridge_ys(w, 62, [(5, 256, 0.6), (3, 128, 2.2), (2, 64, 1.1)])
+    ys = ridge_ys(w, FG_RIDGE_Y, [(5, 256, 0.6), (3, 128, 2.2), (2, 64, 1.1)])
     fill_below(d, ys, h, "#3f7035")
     top_band(d, ys, "#548f44", 9)
     for x, y in enumerate(ys):
@@ -417,7 +417,7 @@ def make_foreground() -> None:
         d.line([x, y + 12, x, y + 2], fill="#356028")
         d.ellipse([x - 3, y - 2, x + 3, y + 4], fill=c)
 
-    img.save(OUT / "fg-fence.png")
+    img.save(OUT / "fg-grass.png")
 
 
 # ---------------------------------------------------------------- props
@@ -805,21 +805,29 @@ def in_banana():
 
 
 def in_kolam():
-    """Rice-flour kolam laid on the road at the threshold."""
-    im = Image.new("RGBA", (104, 36), (0, 0, 0, 0))
+    """Rice-flour kolam laid on the road at the threshold.
+
+    Flat on purpose. Only a shallow strip of road shows between the character's
+    feet and the foreground verge — and how shallow depends on where the camera
+    deadzone happens to have left the player — so a kolam drawn at a comfortable
+    3/4 angle spends half its life hidden behind the grass. Squashed to 22px it
+    always lands in the strip, and a circle chalked on the ground really is that
+    flat from this angle.
+    """
+    im = Image.new("RGBA", (104, 22), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    cx, cy = 52, 20
+    cx, cy = 52, 11
     for r, c in ((44, "#f7f3ea"), (32, "#f5a623"), (20, "#f7f3ea")):
-        d.ellipse([cx - r, cy - r // 2, cx + r, cy + r // 2], outline=c, width=2)
+        d.ellipse([cx - r, cy - r // 4, cx + r, cy + r // 4], outline=c, width=2)
     for i in range(16):
         a = math.radians(i * 22.5)
-        x, y = cx + math.cos(a) * 38, cy + math.sin(a) * 17
+        x, y = cx + math.cos(a) * 38, cy + math.sin(a) * 9
         d.ellipse([x - 2, y - 1, x + 2, y + 1], fill="#f7f3ea")
     for i in range(8):
         a = math.radians(i * 45)
-        x, y = cx + math.cos(a) * 20, cy + math.sin(a) * 9
-        d.ellipse([x - 4, y - 2, x + 4, y + 2], fill="#e0576f")
-    d.ellipse([cx - 6, cy - 3, cx + 6, cy + 3], fill="#f5a623")
+        x, y = cx + math.cos(a) * 20, cy + math.sin(a) * 5
+        d.ellipse([x - 4, y - 1, x + 4, y + 1], fill="#e0576f")
+    d.ellipse([cx - 6, cy - 2, cx + 6, cy + 2], fill="#f5a623")
     d.ellipse([cx - 2, cy - 1, cx + 2, cy + 1], fill="#f7f3ea")
     return im
 
@@ -926,11 +934,13 @@ def acc_cane(d, ox, by, hy):
 
 
 def acc_saree(d, ox, by, hy):
-    """Ammamma: a pallu drawn over one shoulder, jasmine in her hair, a stick."""
+    """Pedhamma: a pallu drawn over one shoulder, jasmine in her hair.
+
+    No walking stick — she is an aunt, not a grandmother. Mormor keeps the cane.
+    """
     d.polygon([(ox + 11, by), (ox + 17, by), (ox + 24, by + 13), (ox + 18, by + 13)], fill="#c9455c")
     d.line([ox + 12, by + 2, ox + 22, by + 12], fill="#f5d76b")
     d.line([ox + 14, by, ox + 24, by + 10], fill="#f5d76b")
-    d.line([ox + 27, by + 5, ox + 27, by + 20], fill="#7d5333", width=2)
     for i in range(4):  # mallige strand
         d.ellipse([ox + 8, hy + 3 + i * 3, ox + 11, hy + 6 + i * 3], fill=JASMINE)
 
@@ -994,7 +1004,8 @@ ACCESSORIES = {
 }
 
 
-def draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress, accessory):
+def draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress, accessory,
+                   curly=False):
     """A chibi character facing RIGHT, art centred in a 40x40 frame."""
     d = ImageDraw.Draw(frame)
     ox = BODY_X
@@ -1048,14 +1059,40 @@ def draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress, a
         d.rectangle([ox + 19, by + 8, ox + 21, by + 10], fill=skin)
 
     hy = 3 + bob
-    d.rounded_rectangle([ox + 8, hy, ox + 25, hy + 16], radius=5, fill=skin)
-    d.rounded_rectangle([ox + 7, hy - 1, ox + 25, hy + 7], radius=4, fill=hair)
-    d.rectangle([ox + 7, hy + 4, ox + 12, hy + 12], fill=hair)
-    d.polygon([(ox + 18, hy + 3), (ox + 25, hy + 3), (ox + 25, hy + 6), (ox + 20, hy + 5)], fill=hair)
-    d.line([ox + 8, hy + 1, ox + 24, hy + 1], fill=shade(hair, 1.35))
-    if long_hair:
-        d.rectangle([ox + 6, hy + 4, ox + 10, hy + 25], fill=hair)
-        d.rectangle([ox + 6, hy + 22, ox + 10, hy + 25], fill=shade(hair, 0.8))
+
+    def puff(cx_, cy_, r, color):
+        d.ellipse([ox + cx_ - r, cy_ - r, ox + cx_ + r, cy_ + r], fill=color)
+
+    if curly:
+        # Hair as a soft round mass first, with the face set into the front of
+        # it. The straight side panel the other characters use reads as
+        # dead-straight hair, which is not the silhouette we want here.
+        #
+        # Nothing may reach above hy-1: the frame is 40px, the art already fills
+        # it, and the jump pose lifts everything 2px. Volume goes backwards and
+        # down, where there is room, not up — a crown that pokes out of the
+        # frame comes back as a flat cut across the top of her head.
+        for cx_, cy_, r in ((13, hy + 7, 8), (6, hy + 8, 6), (18, hy + 7, 7)):
+            puff(cx_, cy_, r, hair)
+        if long_hair:
+            for cx_, cy_, r in ((5, hy + 15, 6), (6, hy + 21, 5)):
+                puff(cx_, cy_, r, hair)
+        d.rounded_rectangle([ox + 10, hy + 1, ox + 25, hy + 16], radius=5, fill=skin)
+        # a few curls breaking the line of the forehead and the crown
+        for cx_, cy_, r in ((11, hy + 3, 4), (16, hy + 3, 4), (21, hy + 2, 3), (24, hy + 3, 2)):
+            puff(cx_, cy_, r, hair)
+        for cx_, cy_, r in ((10, hy + 1, 2), (17, hy + 1, 2), (5, hy + 4, 2)):
+            puff(cx_, cy_, r, shade(hair, 1.3))
+    else:
+        d.rounded_rectangle([ox + 8, hy, ox + 25, hy + 16], radius=5, fill=skin)
+        d.rounded_rectangle([ox + 7, hy - 1, ox + 25, hy + 7], radius=4, fill=hair)
+        d.rectangle([ox + 7, hy + 4, ox + 12, hy + 12], fill=hair)
+        d.polygon([(ox + 18, hy + 3), (ox + 25, hy + 3), (ox + 25, hy + 6), (ox + 20, hy + 5)],
+                  fill=hair)
+        d.line([ox + 8, hy + 1, ox + 24, hy + 1], fill=shade(hair, 1.35))
+        if long_hair:
+            d.rectangle([ox + 6, hy + 4, ox + 10, hy + 25], fill=hair)
+            d.rectangle([ox + 6, hy + 22, ox + 10, hy + 25], fill=shade(hair, 0.8))
     d.ellipse([ox + 11, hy + 8, ox + 15, hy + 12], fill=skin)
     d.point((ox + 13, hy + 10), fill=shade(skin, 0.8))
     if pose == "blink":
@@ -1071,11 +1108,13 @@ def draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress, a
         ACCESSORIES[accessory](d, ox, by, hy)
 
 
-def make_character(name, skin, hair, outfit, outfit2, long_hair=False, dress=False, accessory=None):
+def make_character(name, skin, hair, outfit, outfit2, long_hair=False, dress=False, accessory=None,
+                   curly=False):
     sheet = Image.new("RGBA", (FRAME_W * len(POSES), FRAME_H), (0, 0, 0, 0))
     for i, pose in enumerate(POSES):
         frame = Image.new("RGBA", (FRAME_W, FRAME_H), (0, 0, 0, 0))
-        draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress, accessory)
+        draw_side_char(frame, skin, hair, outfit, outfit2, pose, long_hair, dress, accessory,
+                       curly=curly)
         outline_sprite(frame)
         sheet.paste(frame, (i * FRAME_W, 0))
     sheet.save(OUT / f"char-{name}.png")
@@ -1144,15 +1183,18 @@ def main() -> None:
     make_dust()
 
     make_character("groom", "#c98d5e", "#221a18", "#3d5a80", "#2b4462")
-    make_character("bride", "#f0d0b4", "#d9b168", "#f7f3ea", "#d8c9b8", long_hair=True, dress=True)
-    # the two grandmothers, one from each side
+    make_character("bride", "#7d5033", "#2a2018", "#f7f3ea", "#d8c9b8",
+                   long_hair=True, dress=True, curly=True)
+    # one elder from each side: her grandmother, his aunt (hence the dark hair —
+    # she is a generation younger than Mormor and should not read as her twin)
     make_character("npc-mormor", "#f0d5bd", "#e2e0dc", "#6f8ba8", "#5a7189",
                    long_hair=True, dress=True, accessory="cane")
-    make_character("npc-ammamma", "#b87b4c", "#e8e4e0", "#c9455c", "#a3384b",
+    make_character("npc-pedhamma", "#b87b4c", "#2a2320", "#c9455c", "#a3384b",
                    long_hair=True, dress=True, accessory="saree")
     make_character("npc-baker", "#e8bd95", "#a85a2a", "#e0576f", "#b84457", accessory="tray")
-    make_character("npc-florist", "#c98d5e", "#2a2320", "#7fb069", "#628a50",
-                   long_hair=True, dress=True, accessory="basket")
+    # the bride's sister — same colouring, a shorter crop so the two read apart
+    make_character("npc-florist", "#7d5033", "#2a2018", "#7fb069", "#628a50",
+                   dress=True, accessory="basket", curly=True)
     make_character("npc-musician", "#b87b4c", "#2a2320", "#f5a623", "#d98e1b", accessory="nadaswaram")
     make_character("npc-kid", "#d9a878", "#2a2320", "#f5d76b", "#d4b73f", accessory="pillow")
 
