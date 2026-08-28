@@ -48,7 +48,7 @@ export const WEDDING = {
   // that reads as a typo, so the line carries it once. The map link is what
   // anyone actually navigates by.
   address: 'Vishwanathapalle, Telangana 502277, India',
-  mapsHint: '[e.g. "10 min from the airport, parking on site"]',
+  mapsHint: "About an hour's drive from central Hyderabad.",
   /** Tapped from the invitation card. Empty string hides the link. */
   mapsUrl: 'https://maps.app.goo.gl/v8kZeBMn2J93YpNi9',
   dressCode: 'Festive',
@@ -86,8 +86,8 @@ export interface NpcDef {
 export const NPCS: NpcDef[] = [
   {
     id: 'save-the-date',
-    name: `[Mormor's name]`,
-    role: `${COUPLE.partner2}'s grandmother`,
+    name: 'Susana',
+    role: `${COUPLE.partner2}'s mother`,
     sprite: 'char-npc-mormor',
     tx: 12,
     pages: [
@@ -103,7 +103,7 @@ export const NPCS: NpcDef[] = [
     sprite: 'char-npc-pedhamma',
     tx: 30,
     pages: [
-      `So you have met Mormor already! Good. She and I have been planning this between us — one wedding, two families' worth of opinions.`,
+      `So you have met Susana already! Good. She and I have been planning this between us — one wedding, two families' worth of opinions.`,
       {
         text: `We begin at our house — the haldi, ${HALDI.date}, ${HALDI.time}. ${HALDI.address}. Little lanes out there, so take the map with you.`,
         link: { text: 'Haldi in Maps 🗺️', href: HALDI.mapsUrl },
@@ -129,7 +129,7 @@ export const NPCS: NpcDef[] = [
   },
   {
     id: 'dress-code',
-    name: `[Sister's name]`,
+    name: 'Nikitha',
     role: 'flowers and garlands',
     sprite: 'char-npc-florist',
     tx: 100,
@@ -140,7 +140,7 @@ export const NPCS: NpcDef[] = [
   },
   {
     id: 'food',
-    name: `[Friend's name]`,
+    name: `${COUPLE.partner1}'s friend`,
     role: 'in charge of the sweets',
     sprite: 'char-npc-baker',
     tx: 135,
@@ -151,7 +151,7 @@ export const NPCS: NpcDef[] = [
   },
   {
     id: 'rings',
-    name: `[Little one's name]`,
+    name: 'Sara',
     role: 'ring bearer',
     sprite: 'char-npc-kid',
     tx: 155,
@@ -180,7 +180,7 @@ export const COUPLE_SCENE = {
     GUEST
       ? `You found us, ${GUEST}. Thank you for walking all this way to get here.`
       : `You found us. Thank you for walking all this way to get here.`,
-    `[Write the line you would want every single guest to read — the two of you, in your own words.]`,
+    `Half of this wedding will be new to you — whichever half you arrive knowing. Come anyway, ask questions, eat everything, and dance with someone from the other side.`,
   ],
   /** Only shown if the guest bought something at the stall. */
   giftLine: (gift: string) => `And you brought ${gift}! You really did not have to. We love it.`,
@@ -197,7 +197,7 @@ export interface GiftDef {
 }
 
 export const SHOP = {
-  keeper: `[Stallholder's name]`,
+  keeper: 'The flower-wala',
   role: 'gift stall',
   /** Said the first time you come by. */
   intro: [
