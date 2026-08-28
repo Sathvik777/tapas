@@ -122,7 +122,8 @@ export const NPCS: NpcDef[] = [
     tx: 68,
     pages: [
       `I am practising for the procession. Do you want to hear how those two met?`,
-      `[Write your how-we-met story here — where you first met, the proposal, a fun fact or two.]`,
+      `Eight years ago to the day. The fourteenth of October, an Irish pub in Stockholm called The Liffey — and then on to Omnipollos Hatt.`,
+      `Which is why the wedding is on the fourteenth. Same date, eight years on.`,
       `Two families, one tune. It took some rehearsing. ♪`,
     ],
   },
