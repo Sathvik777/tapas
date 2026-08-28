@@ -51,7 +51,7 @@ export const WEDDING = {
   mapsHint: '[e.g. "10 min from the airport, parking on site"]',
   /** Tapped from the invitation card. Empty string hides the link. */
   mapsUrl: 'https://maps.app.goo.gl/v8kZeBMn2J93YpNi9',
-  dressCode: '[Festive / Traditional / Pastels]',
+  dressCode: 'Festive',
 };
 
 /**
