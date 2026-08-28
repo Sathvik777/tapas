@@ -116,12 +116,12 @@ export const NPCS: NpcDef[] = [
   },
   {
     id: 'story',
-    name: `[Cousin's name]`,
+    name: 'Samyukth',
     role: 'playing the nadaswaram',
     sprite: 'char-npc-musician',
     tx: 68,
     pages: [
-      `I am practising for the procession. Do you want to hear how those two met?`,
+      `I am practising for the procession. Do you want to hear how my brother met ${COUPLE.partner2}?`,
       `Eight years ago to the day. The fourteenth of October, an Irish pub in Stockholm called The Liffey — and then on to Omnipollos Hatt.`,
       `Which is why the wedding is on the fourteenth. Same date, eight years on.`,
       `Two families, one tune. It took some rehearsing. ♪`,

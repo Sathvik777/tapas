@@ -28,7 +28,7 @@ const CHROMIUM = process.env.CHROMIUM_PATH ?? undefined;
 const VILLAGERS = [
   ['mormor', 12],
   ['pedhamma', 30],
-  ['cousin (nadaswaram)', 68],
+  ['Samyukth (nadaswaram)', 68],
   ['sister (flowers)', 100],
   ['friend (sweets)', 135],
   ['little one (rings)', 155],
