@@ -165,7 +165,7 @@ export const NPCS: NpcDef[] = [
     tx: 135,
     pages: [
       `Taste test! There will be prinsesstårta AND a tray of sweets, because nobody could agree.`,
-      `[Add a line about the food — the caterer, a family recipe, the thing you're most excited to eat.]`,
+      `No caterers anywhere near this wedding — every dish is cooked by the family. Telangana food, the proper kind, from people who have been making it their whole lives.`,
     ],
   },
   {
