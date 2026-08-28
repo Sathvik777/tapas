@@ -159,9 +159,34 @@ every piece — nothing was moved out of it — but it is now something a guest
 chooses rather than something they must survive.
 
 The guest's name rides in the URL (`?to=`, parsed in `src/guest.ts`) and lands
-in exactly two places: the line on the card, and the couple's first words at
-the mandap. **A link with no name must read correctly**, because that is the
-one that gets forwarded on. There is no guest list in the repo — it is public.
+in exactly three places: the opening flourish, the line on the card, and the
+couple's first words at the mandap. **A link with no name must read
+correctly**, because that is the one that gets forwarded on. There is no guest
+list in the repo — it is public.
+
+### The opening flourish (`src/scenes/Opening.ts`)
+
+The name was the point of a named link and it used to sit several taps inside
+the card, where most guests never saw it. So the title screen now opens by
+saying it: a lead-in, the name arriving a letter at a time in a scatter of
+sparks, and "You're invited" landing under it in a shower of petals. Then it
+clears and the title is sitting there as before, untouched.
+
+A link with no name plays the same three beats with the couple in the middle
+slot, so nobody can tell from the opening which link they were sent.
+
+What it must keep doing:
+
+- **Get out of the way.** Any tap or key skips it, and the doors do not appear
+  until it is over — so it is skippable rather than something to press through,
+  and a key during it cannot launch the game out from under the guest.
+- **Hold the title back.** The veil dims the title but does not hide it, and
+  the couple's names land in the same band as the guest's. They are faded down
+  for the duration and back up as it clears; the earlier version had the two
+  overlapping, which no assertion caught and a screenshot showed instantly.
+- **Fit any name.** The name is whatever was in the address bar, up to sixty
+  characters. The size is measured against the screen and drops to two lines
+  rather than overflowing.
 
 ### The finale
 
@@ -256,6 +281,14 @@ Things that look like bugs but aren't, and fixes that will reintroduce real ones
   an asset is only half of it. A texture that was never loaded renders as
   Phaser's missing-texture placeholder — green wireframe boxes — which is exactly
   what the first pass of the fireworks looked like.
+- **Phaser's clock falls behind the wall clock below 60fps.** It advances by
+  smoothed frame deltas, so on a slow renderer a sequence of timed beats
+  stretches — the opening flourish was measured taking 6.4s to play its 3s
+  timeline in a software-rendered browser, which is a long time to hold a guest
+  who only wants the date. The beats stay on the scene clock so they keep step
+  with each other and with the tweens; a real-time `setTimeout` backstop
+  (`MAX_WALL_MS`) ends the whole thing regardless. Anything else built out of
+  timed beats needs the same treatment.
 - **Preview deployments may sit behind a Vercel login.** That is deployment
   protection, not a broken build — Settings → Deployment Protection → Vercel
   Authentication.

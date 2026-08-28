@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { COUPLE, INVITATION_LINES } from '../content/wedding';
 import { InvitationCard } from '../ui/InvitationCard';
 import { TitleMenu } from '../ui/TitleMenu';
+import { Opening } from './Opening';
 
 export class TitleScene extends Phaser.Scene {
   constructor() {
@@ -9,6 +10,9 @@ export class TitleScene extends Phaser.Scene {
   }
 
   create(): void {
+    /** Rebuilt by every layout; the flourish holds these back while it runs. */
+    let heading: Phaser.GameObjects.Text[] = [];
+
     const layout = () => {
       const { width, height } = this.scale;
       const cx = width / 2;
@@ -32,7 +36,7 @@ export class TitleScene extends Phaser.Scene {
 
       this.add.image(cx, height * 0.5, 'mandap').setScale(2.2).setOrigin(0.5, 1);
 
-      this.add
+      const couple = this.add
         .text(cx, height * 0.52, `${COUPLE.partner1} ♥ ${COUPLE.partner2}`, {
           fontFamily: 'Georgia, serif',
           fontSize: '36px',
@@ -42,7 +46,7 @@ export class TitleScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
-      this.add
+      const tagline = this.add
         .text(cx, height * 0.52 + 36, 'a tiny adventure invitation', {
           fontFamily: 'Georgia, serif',
           fontSize: '17px',
@@ -52,6 +56,8 @@ export class TitleScene extends Phaser.Scene {
           strokeThickness: 3,
         })
         .setOrigin(0.5);
+
+      heading = [couple, tagline];
 
       this.add
         .text(cx, height - 14, 'walk → with arrows / buttons · jump with Space / ⤒ · talk with E / ❤', {
@@ -65,33 +71,59 @@ export class TitleScene extends Phaser.Scene {
     };
 
     layout();
-    this.scale.on('resize', layout);
 
     const menu = new TitleMenu();
     const card = new InvitationCard();
 
+    // The flourish clears the display list on a rotation, so it ends first and
+    // the title lays out underneath as usual.
+    const onResize = () => {
+      opening.skip();
+      layout();
+    };
+
     const begin = () => {
-      this.scale.off('resize', layout);
+      this.scale.off('resize', onResize);
+      opening.destroy();
       menu.destroy();
       card.destroy();
       this.scene.start('world');
     };
 
-    menu.show(
-      // Reading the invitation and then walking is the natural order, so the
-      // card's own button carries on into the game rather than dead-ending.
-      () => card.show(INVITATION_LINES, begin, 'Take the walk →'),
-      begin,
+    // The doors wait for the name to have been said — until then there is
+    // nothing to press, which is what makes the flourish skippable rather than
+    // something to press through.
+    const opening = new Opening(
+      this,
+      () => heading,
+      () =>
+        menu.show(
+          // Reading the invitation and then walking is the natural order, so
+          // the card's own button carries on into the game rather than
+          // dead-ending.
+          () => card.show(INVITATION_LINES, begin, 'Take the walk →'),
+          begin,
+        ),
     );
 
+    this.scale.on('resize', onResize);
+    opening.play();
+
     // Any key still starts the walk, the way "tap to start" used to — except
-    // while the card is up, where a keypress would start the game underneath it.
+    // during the flourish, where it skips to the title rather than launching
+    // the game out from under it, and while the card is up, where a keypress
+    // would start the game underneath it.
     this.input.keyboard?.on('keydown', () => {
-      if (!card.isOpen) begin();
+      if (opening.playing) opening.skip();
+      else if (!card.isOpen) begin();
+    });
+    this.input.on('pointerdown', () => {
+      if (opening.playing) opening.skip();
     });
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.scale.off('resize', layout);
+      this.scale.off('resize', onResize);
+      opening.destroy();
       menu.destroy();
       card.destroy();
     });

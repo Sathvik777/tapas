@@ -55,6 +55,25 @@ export const WEDDING = {
 };
 
 /**
+ * The opening flourish, before the title settles.
+ *
+ * The named link is the whole point of this invitation, and until now the name
+ * did not surface until the card — several taps in, if a guest opened it at
+ * all. So the first thing that happens is the name being said out loud.
+ *
+ * A link with no name on it is the one that gets forwarded around, and it
+ * plays the same three beats with the couple in the middle slot, so nobody can
+ * tell from the opening that they were sent the general one.
+ */
+export const OPENING = {
+  lead: GUEST ? 'An invitation for' : 'An invitation from',
+  /** The big line, spelled out a letter at a time. */
+  hero: GUEST ?? `${COUPLE.partner1} ♥ ${COUPLE.partner2}`,
+  /** Lands under the name once it has finished arriving. */
+  banner: `You're invited ♥`,
+};
+
+/**
  * A page of dialogue. Give one a `link` and a tappable button appears under the
  * text once it has finished typing — which is how both venues are handed over,
  * since neither address is one a guest could navigate by on its own.
