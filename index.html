@@ -17,7 +17,12 @@
       body {
         margin: 0;
         padding: 0;
-        height: 100%;
+        /* iOS Safari resolves `height: 100%` against the viewport it has when
+           the page loads, so once the address bar collapses the page keeps the
+           old height and the game sits in a dark band. `dvh` tracks the toolbar;
+           the `vh` above it is the fallback for browsers without `dvh`. */
+        height: 100vh;
+        height: 100dvh;
         background: #1a1423;
         overflow: hidden;
         overscroll-behavior: none;
