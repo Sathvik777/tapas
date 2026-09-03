@@ -17,12 +17,15 @@
       body {
         margin: 0;
         padding: 0;
-        /* iOS Safari resolves `height: 100%` against the viewport it has when
-           the page loads, so once the address bar collapses the page keeps the
-           old height and the game sits in a dark band. `dvh` tracks the toolbar;
-           the `vh` above it is the fallback for browsers without `dvh`. */
+        /* The height iOS Safari reports through CSS is not trustworthy on a
+           cold load: `100%` is resolved against the viewport the page opened
+           with, and even `dvh` stays stale until something forces a re-layout
+           (backgrounding the tab and returning is what used to fix it). So the
+           real height is measured in JS and pinned to `--app-height`; these two
+           are the fallbacks that apply until that first measurement lands. */
         height: 100vh;
         height: 100dvh;
+        height: var(--app-height, 100dvh);
         background: #1a1423;
         overflow: hidden;
         overscroll-behavior: none;
