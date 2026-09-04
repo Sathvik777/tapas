@@ -52,8 +52,17 @@ https://<your-url>/                            → "joyfully invite you"
 ```
 
 URL-encode it: a space is `%20` and an ampersand is `%26` — an unescaped `&`
-would end the parameter and the second name would vanish. In a browser console,
-`encodeURIComponent("Anders & Eva")` does it for you.
+would end the parameter and the second name would vanish. `scripts/make-invites.mjs`
+does that for you, one pasteable line per guest:
+
+```bash
+node scripts/make-invites.mjs "Anders & Eva" "Mormor"
+node scripts/make-invites.mjs --file ~/guests.txt          # one name per line
+node scripts/make-invites.mjs --base https://example.com "Mormor"
+```
+
+Names are arguments, never a file in here — keep the list somewhere outside the
+repo. `--base` defaults to the preview URL below.
 
 There is deliberately **no guest list in the repo** — it is public, and a list
 of everyone invited would be published with it. Each link only knows the one
