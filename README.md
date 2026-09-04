@@ -62,7 +62,7 @@ node scripts/make-invites.mjs --base https://example.com "Mormor"
 ```
 
 Names are arguments, never a file in here — keep the list somewhere outside the
-repo. `--base` defaults to **https://sathvik-samina.com**; pass it a preview URL
+repo. `--base` defaults to **https://www.sathviksamina.app**; pass it a preview URL
 to check a change before the guests see it.
 
 There is deliberately **no guest list in the repo** — it is public, and a list
@@ -72,10 +72,19 @@ one that gets forwarded around.
 
 ## Continuous deployment (Vercel)
 
-The invitation lives at **https://sathvik-samina.com** — that is the link the
+The invitation lives at **https://www.sathviksamina.app** — that is the link the
 guests get. Vercel builds production from `master`, so merging to `master`
 publishes it; every branch and pull request also gets its own preview URL, which
 Vercel comments on the PR.
+
+### Point the domain at Vercel — don't forward it
+
+Registrar-level domain forwarding (GoDaddy's "Forwarding" panel, and the
+equivalent elsewhere) **drops the query string**. Every guest then lands on a
+bare URL, `?to=` never reaches the page, and the opening plays the unaddressed
+version — the invitation works and is silently no longer addressed to anyone,
+which is the kind of bug you only catch by opening a real link. Add the domain
+in **Vercel → Settings → Domains** and use the DNS records it gives you instead.
 
 ### If a link asks you to log in
 

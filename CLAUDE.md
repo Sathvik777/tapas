@@ -41,7 +41,7 @@ Node 22, pinned in `.nvmrc`.
 - **Both families, everywhere.** Swedish and South Indian vocabularies share the
   whole level; neither gets a stretch to itself. See `docs/DESIGN.md`.
 - Develop on a branch and open a PR; `master` is what Vercel publishes to
-  https://sathvik-samina.com, the link the guests actually have.
+  https://www.sathviksamina.app, the link the guests actually have.
 
 ## Before you push
 

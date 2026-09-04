@@ -18,7 +18,7 @@
 import { readFileSync } from 'node:fs';
 
 /** The wedding's own domain; override with --base to test against a preview. */
-const DEFAULT_BASE = 'https://sathvik-samina.com';
+const DEFAULT_BASE = 'https://www.sathviksamina.app';
 
 /** Matches MAX_LENGTH in src/guest.ts — longer names are cut on the card. */
 const MAX_LENGTH = 60;

@@ -275,7 +275,7 @@ Things that look like bugs but aren't, and fixes that will reintroduce real ones
   it looks tidier until a long name wraps to two lines and covers the first line
   of dialogue.
 - **`master` is live.** Vercel builds production from it and serves
-  https://sathvik-samina.com, which is the link the guests hold — a merge is a
+  https://www.sathviksamina.app, which is the link the guests hold — a merge is a
   publish, and the invitations already sent point at whatever it serves next.
 - **`spark.png` and friends must be added to `BootScene`'s load list.** Generating
   an asset is only half of it. A texture that was never loaded renders as
