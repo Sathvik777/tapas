@@ -1,8 +1,13 @@
 import { el, injectStylesOnce, isTouchDevice } from './dom';
 
 /**
- * Platformer touch controls: ◀ ▶ on the left, jump on the right,
+ * Platformer touch controls: ◀ ▶ on the left, a jump button on the right,
  * and a contextual ❤ talk button that appears near anyone you can talk to.
+ *
+ * The two action buttons carry a word under the glyph. ⤒ and ❤ are not
+ * self-explanatory to someone who has never played a platformer — and half the
+ * guest list hasn't — so the button says what it does.
+ *
  * Only mounted on touch devices.
  */
 export class TouchControls {
@@ -16,9 +21,10 @@ export class TouchControls {
     if (!isTouchDevice()) return;
     injectStylesOnce();
 
-    const make = (cls: string, label: string): HTMLElement => {
+    const make = (cls: string, glyph: string, caption?: string): HTMLElement => {
       const btn = el('div', `wq-btn ${cls}`);
-      btn.textContent = label;
+      el('span', 'wq-btn-icon', btn).textContent = glyph;
+      if (caption) el('span', 'wq-btn-cap', btn).textContent = caption;
       this.nodes.push(btn);
       return btn;
     };
@@ -40,13 +46,13 @@ export class TouchControls {
     hold(make('wq-btn-left', '◀'), 'left');
     hold(make('wq-btn-right', '▶'), 'right');
 
-    const jump = make('wq-btn-jump', '⤒');
+    const jump = make('wq-btn-jump', '⤒', 'Jump');
     jump.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       onJump();
     });
 
-    this.actionBtn = make('wq-btn-talk', '❤');
+    this.actionBtn = make('wq-btn-talk', '❤', 'Talk');
     this.actionBtn.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       e.stopPropagation();

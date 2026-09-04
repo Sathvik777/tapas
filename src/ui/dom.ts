@@ -72,7 +72,7 @@ export function injectStylesOnce(): void {
   .wq-btn {
     position: fixed; z-index: 12; border-radius: 50%;
     width: 64px; height: 64px;
-    display: flex; align-items: center; justify-content: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
     background: #fdf9f0; border: 3px solid #4a3428;
     box-shadow: 0 4px 0 rgba(74, 52, 40, 0.45);
     color: #4a3428; font-size: 26px;
@@ -80,12 +80,21 @@ export function injectStylesOnce(): void {
     bottom: max(22px, env(safe-area-inset-bottom));
   }
   .wq-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(74, 52, 40, 0.45); }
+  .wq-btn .wq-btn-icon { line-height: 1; }
+  /* The word under the glyph. Small and tight, so the round button stays the
+     same size it always was — the glyph shrinks to make room, the button does
+     not grow into the thumb's way. */
+  .wq-btn .wq-btn-cap {
+    margin-top: 3px; font: 10px/1 Georgia, serif;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
   .wq-btn-left { left: 16px; }
   .wq-btn-right { left: 94px; }
-  .wq-btn-jump { right: 16px; width: 72px; height: 72px; font-size: 32px; }
+  .wq-btn-jump { right: 16px; width: 72px; height: 72px; font-size: 30px; }
+  .wq-btn-jump .wq-btn-cap { font-size: 11px; }
   .wq-btn-talk {
     right: 26px; bottom: max(120px, calc(env(safe-area-inset-bottom) + 98px));
-    background: #e0576f; color: #fff;
+    background: #e0576f; color: #fff; font-size: 24px;
   }
   .wq-doors {
     position: fixed; left: 50%; top: 68%; transform: translateX(-50%);
