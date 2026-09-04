@@ -40,8 +40,8 @@ Node 22, pinned in `.nvmrc`.
   `[bracketed]` placeholder until the owner fills it in. Don't invent any of it.
 - **Both families, everywhere.** Swedish and South Indian vocabularies share the
   whole level; neither gets a stretch to itself. See `docs/DESIGN.md`.
-- Develop on `claude/wedding-game-poc-n3638n`; pushes redeploy the preview URL
-  in the README.
+- Develop on a branch and open a PR; `master` is what Vercel publishes to
+  https://sathvik-samina.com, the link the guests actually have.
 
 ## Before you push
 

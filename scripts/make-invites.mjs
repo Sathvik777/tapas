@@ -2,7 +2,7 @@
 /**
  * Turns guest names into addressed invitation links.
  *
- *   node scripts/make-invites.mjs "Veeru & Sowjanya" "Sasank"
+ *   node scripts/make-invites.mjs "Anders & Eva" "Mormor"
  *   node scripts/make-invites.mjs --file guests.txt          (one name per line)
  *   node scripts/make-invites.mjs --base https://…/ "Mormor"
  *
@@ -17,8 +17,8 @@
 
 import { readFileSync } from 'node:fs';
 
-/** The preview deployment from the README; override with --base. */
-const DEFAULT_BASE = 'https://tapas-git-claude-wedding-game-poc-n3638n-sathvik777s-projects.vercel.app';
+/** The wedding's own domain; override with --base to test against a preview. */
+const DEFAULT_BASE = 'https://sathvik-samina.com';
 
 /** Matches MAX_LENGTH in src/guest.ts — longer names are cut on the card. */
 const MAX_LENGTH = 60;

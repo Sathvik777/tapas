@@ -62,7 +62,8 @@ node scripts/make-invites.mjs --base https://example.com "Mormor"
 ```
 
 Names are arguments, never a file in here — keep the list somewhere outside the
-repo. `--base` defaults to the preview URL below.
+repo. `--base` defaults to **https://sathvik-samina.com**; pass it a preview URL
+to check a change before the guests see it.
 
 There is deliberately **no guest list in the repo** — it is public, and a list
 of everyone invited would be published with it. Each link only knows the one
@@ -71,29 +72,19 @@ one that gets forwarded around.
 
 ## Continuous deployment (Vercel)
 
-Vercel is connected, and **every push to this branch redeploys the same preview URL**:
+The invitation lives at **https://sathvik-samina.com** — that is the link the
+guests get. Vercel builds production from `master`, so merging to `master`
+publishes it; every branch and pull request also gets its own preview URL, which
+Vercel comments on the PR.
 
-**https://tapas-git-claude-wedding-game-poc-n3638n-sathvik777s-projects.vercel.app**
+### If a link asks you to log in
 
-Keep that link on your phone — it always serves the latest commit on
-`claude/wedding-game-poc-n3638n`, so you can re-test after each change without
-hunting for a new URL. Vercel also comments a link on every pull request.
-
-### If the preview asks you to log in
-
-New Vercel projects protect preview deployments by default, which means anyone
-who is not signed into your Vercel account hits a login wall — including you on a
-phone, and including any guest you send the game to. Turn it off at
-**Vercel → the `tapas` project → Settings → Deployment Protection → Vercel
-Authentication → Disabled**. The preview becomes publicly reachable by URL, which
-is what you want for an invitation (and the repo is public already).
-
-### Why the production URL is empty
-
-Vercel builds production from the repository's default branch, and `master` is
-still the old TAPAS Python fork — there is no `package.json` there, so there is
-nothing for it to build. Merging this branch into `master` makes the production
-URL serve the game. Until then, use the preview URL above.
+New Vercel projects protect deployments by default, which means anyone who is not
+signed into your Vercel account hits a login wall — including you on a phone, and
+including any guest you send the game to. Turn it off at **Vercel → the `tapas`
+project → Settings → Deployment Protection → Vercel Authentication → Disabled**.
+Open an invitation link in a private window before sending a batch out: that is
+the only way to see what a guest sees.
 
 ## Checking a change
 

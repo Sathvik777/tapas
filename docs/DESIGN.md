@@ -274,9 +274,9 @@ Things that look like bugs but aren't, and fixes that will reintroduce real ones
 - **The name badge is in the document flow on purpose.** Absolutely positioning
   it looks tidier until a long name wraps to two lines and covers the first line
   of dialogue.
-- **The production URL is empty by design, for now.** Vercel builds production
-  from `master`, which is still the original Python fork. The branch preview URL
-  is the live game; merging is what makes production serve it.
+- **`master` is live.** Vercel builds production from it and serves
+  https://sathvik-samina.com, which is the link the guests hold — a merge is a
+  publish, and the invitations already sent point at whatever it serves next.
 - **`spark.png` and friends must be added to `BootScene`'s load list.** Generating
   an asset is only half of it. A texture that was never loaded renders as
   Phaser's missing-texture placeholder — green wireframe boxes — which is exactly
