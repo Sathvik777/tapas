@@ -1185,9 +1185,10 @@ def main() -> None:
     make_character("groom", "#c98d5e", "#221a18", "#3d5a80", "#2b4462")
     make_character("bride", "#7d5033", "#2a2018", "#f7f3ea", "#d8c9b8",
                    long_hair=True, dress=True, curly=True)
-    # one elder from each side: her grandmother, his aunt (hence the dark hair —
-    # she is a generation younger than Mormor and should not read as her twin)
-    make_character("npc-mormor", "#f0d5bd", "#e2e0dc", "#6f8ba8", "#5a7189",
+    # one from each side: her mother, his aunt. Both have dark hair — they are
+    # the same generation — so the skin, the dress colours and the props are
+    # what keep them from reading as twins, not a grey/black split.
+    make_character("npc-mormor", "#f0d5bd", "#3f2d26", "#6f8ba8", "#5a7189",
                    long_hair=True, dress=True, accessory="cane")
     make_character("npc-pedhamma", "#b87b4c", "#2a2320", "#c9455c", "#a3384b",
                    long_hair=True, dress=True, accessory="saree")
