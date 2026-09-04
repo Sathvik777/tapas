@@ -105,8 +105,8 @@ export interface NpcDef {
 export const NPCS: NpcDef[] = [
   {
     id: 'save-the-date',
-    name: 'Susanna',
-    role: `${COUPLE.partner2}'s mother`,
+    name: 'Solveig',
+    role: `${COUPLE.partner2}'s grandmother`,
     sprite: 'char-npc-mormor',
     tx: 12,
     pages: [
@@ -122,7 +122,7 @@ export const NPCS: NpcDef[] = [
     sprite: 'char-npc-pedhamma',
     tx: 30,
     pages: [
-      `So you have met Susanna already! Good. She and I have been planning this between us — one wedding, two families' worth of opinions.`,
+      `So you have met Solveig already! Good. She and I have been planning this between us — one wedding, two families' worth of opinions.`,
       {
         text: `We begin at our house — the haldi, ${HALDI.date}, ${HALDI.time}. ${HALDI.address}. Little lanes out there, so take the map with you.`,
         link: { text: 'Haldi in Maps 🗺️', href: HALDI.mapsUrl },
