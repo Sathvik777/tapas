@@ -59,15 +59,24 @@ export class TitleScene extends Phaser.Scene {
 
       heading = [couple, tagline];
 
-      this.add
-        .text(cx, height - 14, 'walk → with arrows / buttons · jump with Space / ⤒ · talk with E / ❤', {
+      // A phone held upright is barely 360px across and this line is ~540px
+      // wide, so on portrait it used to run off both edges — the first and last
+      // control were simply missing. It wraps to fit the width instead, growing
+      // upward from the bottom edge (origin 1) so a second line stays on screen.
+      const hint = this.add
+        .text(cx, height - 10, 'walk → with arrows / buttons · jump with Space / ⤒ · talk with E / ❤', {
           fontFamily: 'monospace',
           fontSize: '12px',
           color: '#fdf9f0',
           stroke: '#3a2b3a',
           strokeThickness: 3,
+          align: 'center',
+          wordWrap: { width: width - 16 },
         })
-        .setOrigin(0.5);
+        .setOrigin(0.5, 1);
+      // Wrapping breaks at spaces, so a viewport narrower than the longest word
+      // can still overflow. Shrink to fit as the backstop.
+      if (hint.width > width - 16) hint.setScale((width - 16) / hint.width);
     };
 
     layout();
